@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新东方前途出国重庆亚英院校查询系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+
+    <style>
+        :root {
+            --m-green: #B2F2BB; 
+            --m-green-dark: #51CF66;
+            --primary: #40C057;
+            --bg: #F8FAF9;
+            --white: #FFFFFF;
+            --text-main: #2D3436;
+            --border: #E9ECEF;
+            --qs-gold: #FFD93D;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif; }
+        body { background: var(--bg); color: var(--text-main); }
+        
+        /* --- 艺术标题与搜索 --- */
+        .header-section { padding: 40px 20px; text-align: center; background: white; border-bottom: 1px solid var(--border); }
+        .art-title {
+            font-size: 36px; font-weight: 900;
+            background: linear-gradient(135deg, #74EBD5 0%, #9BE15D 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+        
+        /* --- 院校卡片 --- */
+        .region-section { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+        .region-title { font-size: 18px; font-weight: bold; margin: 25px 0 15px; color: var(--m-green-dark); display: flex; align-items: center; gap: 10px; }
+        .uni-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+        .uni-card {
+            background: var(--white); border-radius: 20px; padding: 25px; border-bottom: 5px solid var(--m-green);
+            transition: 0.3s; cursor: pointer; position: relative;
+        }
+        .uni-card:hover { transform: translateY(-5px); box-shadow: 0 12px 25px rgba(0,0,0,0.08); }
+        .qs-badge { position: absolute; top: 15px; right: 15px; background: var(--qs-gold); color: #744210; font-size: 11px; font-weight: 900; padding: 4px 10px; border-radius: 50px; }
+        .major-count { display: inline-block; margin-top: 15px; font-size: 12px; color: var(--m-green-dark); background: #F0FFF4; padding: 3px 12px; border-radius: 10px; font-weight: bold; }
+        
+        /* --- 列表页交互 --- */
+        #fullOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--white); z-index: 100; flex-direction: column; }
+        .list-header { padding: 20px 40px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        
+        /* 学院横排 Tab */
+        .faculty-tabs-row { 
+            display: flex; gap: 10px; padding: 15px 40px; overflow-x: auto; 
+            background: #F8FAF9; border-bottom: 1px solid var(--border); white-space: nowrap;
+        }
+        .fac-tab { 
+            padding: 8px 22px; border-radius: 50px; background: #FFF; border: 1px solid var(--border);
+            cursor: pointer; font-size: 13px; transition: 0.2s;
+        }
+        .fac-tab.active { background: var(--m-green-dark); color: white; border-color: var(--m-green-dark); }
+        
+        .scroll-area { flex: 1; overflow-y: auto; padding: 20px 40px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #F8F9FA; padding: 12px; text-align: left; font-size: 13px; color: #94A3B8; border-bottom: 2px solid var(--m-green); }
+        td { padding: 15px; border-bottom: 1px solid #F1F3F5; font-size: 14px; vertical-align: middle; }
+        
+        /* --- 详情弹窗看板 --- */
+        #detailModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 200; justify-content: center; align-items: flex-end; }
+        .modal-content { background: var(--white); width: 100%; max-width: 1100px; height: 92vh; border-radius: 25px 25px 0 0; overflow-y: auto; padding: 40px; position: relative; }
+        .content-box { background: #F8FAF9; padding: 20px; border-radius: 15px; white-space: pre-wrap; margin-top: 10px; line-height: 1.8; font-size: 14px; color: #444; }
+    </style>
+</head>
+
+<body>
+
+    <div class="header-section">
+        <h1 class="art-title">新东方前途出国重庆亚英院校查询系统</h1>
+        <div style="max-width:600px; margin:0 auto; position:relative;">
+            <input type="text" id="globalInput" placeholder="输入关键词搜索专业（如：金融、建筑、AI）" style="width:100%; padding:15px 30px; border-radius:50px; border:3px solid var(--m-green); outline:none;">
+            <button onclick="executeGlobalSearch()" style="position:absolute; right:10px; top:8px; padding:8px 25px; border-radius:40px; border:none; background:var(--m-green-dark); color:white; cursor:pointer; font-weight:bold;">立即查询</button>
+        </div>
+    </div>
+
+    <div class="region-section">
+        <div class="region-title"><i class="fas fa-university"></i> 合作院校库</div>
+        <div class="uni-grid" id="uniGrid">
+        </div>
+    </div>
+
+    <div id="fullOverlay">
+        <div class="list-header">
+            <h2 id="lTitle">专业列表</h2>
+            <button onclick="closeOverlay()" style="padding:8px 25px; border-radius:50px; border:1px solid #ddd; cursor:pointer; background:none;">返回首页</button>
+        </div>
+        <div class="faculty-tabs-row" id="facTabs"></div>
+        <div class="scroll-area" id="lContent"></div>
+    </div>
+
+    <div id="detailModal">
+        <div class="modal-content">
+            <i class="fas fa-times" style="position:absolute; top:30px; right:30px; cursor:pointer; font-size:24px; color:#ccc;" onclick="closeDetail()"></i>
+            <span id="d_uni_fac" style="color:var(--m-green-dark); font-weight:bold; letter-spacing:1px;"></span>
+            <h1 id="d_cn" style="font-size:28px; margin-top:10px;"></h1>
+            <p id="d_en" style="color:#999; font-size:18px; margin-bottom:20px;"></p>
+
+            <div id="d_metrics" style="display:flex; gap:10px; flex-wrap:wrap;"></div>
+
+            <div style="font-weight:bold; margin-top:30px; color:var(--primary);">| 申请要求</div>
+            <div class="content-box" id="d_req" style="background:#FFF9E6; color:#92400E; border:1px solid #FFE082;"></div>
+
+            <div style="font-weight:bold; margin-top:30px; color:var(--primary);">| 课程结构</div>
+            <div class="content-box" id="d_struct"></div>
+
+            <div style="font-weight:bold; margin-top:30px; color:var(--primary);">| 备注信息</div>
+            <div class="content-box" id="d_memo"></div>
+        </div>
+    </div>
+
+    <script>
+        // 1. 配置院校基础信息
+        const universities = [
+            { name: "香港大学", qs: "QS 26", en: "HKU", csv: "hku_data.csv" },
+            { name: "香港理工大学", qs: "QS 57", en: "PolyU", csv: "polyu_data.csv" },
+            { name: "新加坡国立大学", qs: "QS 8", en: "NUS", csv: "nus_data.csv" }
+        ];
+        
+        let globalMajorDb = []; // 用于存储解析后的全量数据
+        
+        // 2. 页面启动：从 CSV 加载数据
+        window.onload = function() {
+            loadAllData();
+            renderUniCards();
+        };
+        
+        function loadAllData() {
+            universities.forEach(uni => {
+                Papa.parse(uni.csv, {
+                    download: true,
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: function(results) {
+                        // 统一清洗数据并打上学校标签
+                        const cleanedData = results.data.map(item => ({
+                            uni: item["院校"] || uni.name,
+                            fac: item["学院"] || "其他学院",
+                            cn: item["专业中文名称"] || "未知专业",
+                            en: item["专业"] || "Unknown Program",
+                            dur: item["学制"] || "-",
+                            fee: item["学费(HKD)\n请以官网最新数据为准"] || "-",
+                            lang: item["授课语言"] || "英文",
+                            dl: item["申请截止时间"] || "-",
+                            req: item["申请要求"] || "见官网详情",
+                            struct: item["课程结构"] || "暂未公开",
+                            memo: item["备注"] || ""
+                        }));
+                        globalMajorDb = [...globalMajorDb, ...cleanedData];
+                        updateMajorCounts(); // 加载完后更新卡片上的数量
+                    }
+                });
+            });
+        }
+        
+        // 3. 渲染首页卡片
+        function renderUniCards() {
+            document.getElementById('uniGrid').innerHTML = universities.map(u => `
+                <div class="uni-card" onclick="openUni('${u.name}')">
+                    <span class="qs-badge">${u.qs}</span>
+                    <h3>${u.name}</h3>
+                    <p>${u.en}</p>
+                    <span class="major-count" id="count-${u.name}">正在加载数据...</span>
+                </div>
+            `).join('');
+        }
+        
+        function updateMajorCounts() {
+            universities.forEach(u => {
+                const count = globalMajorDb.filter(m => m.uni === u.name).length;
+                const el = document.getElementById(`count-${u.name}`);
+                if(el && count > 0) el.innerHTML = `<i class="fas fa-graduation-cap"></i> 已收录 ${count} 个硕士专业`;
+            });
+        }
+        
+        // 4. 搜索与列表展示逻辑（继承之前的功能）
+        function executeGlobalSearch() {
+            const key = document.getElementById('globalInput').value.trim();
+            if(!key) return alert("请输入关键词");
+            const res = globalMajorDb.filter(m => m.cn.includes(key) || m.en.includes(key) || m.uni.includes(key));
+            renderList(res, `关于“${key}”的搜索结果`, true);
+        }
+        
+        function openUni(uniName) {
+            const res = globalMajorDb.filter(m => m.uni === uniName);
+            renderList(res, uniName, false);
+        }
+        
+        function renderList(list, title, isSearch) {
+            document.getElementById('fullOverlay').style.display = 'flex';
+            document.getElementById('lTitle').innerText = title;
+            const tabRow = document.getElementById('facTabs');
+            
+            // 提取学院（如果是搜索，则显示 学校-学院）
+            const facs = [...new Set(list.map(m => isSearch ? `${m.uni} - ${m.fac}` : m.fac))];
+            
+            tabRow.innerHTML = facs.map((f, i) => `
+                <div class="fac-tab ${i===0?'active':''}" onclick="switchFac('${f}', this, ${JSON.stringify(list).replace(/'/g, "&apos;")})">${f}</div>
+            `).join('');
+        
+            if(facs.length > 0) switchFac(facs[0], null, list);
+        }
+        
+        function switchFac(facName, el, allData) {
+            if(el) {
+                document.querySelectorAll('.fac-tab').forEach(t => t.classList.remove('active'));
+                el.classList.add('active');
+            }
+            const majors = allData.filter(m => (facName.includes(' - ')) ? `${m.uni} - ${m.fac}` === facName : m.fac === facName);
+        
+            document.getElementById('lContent').innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th width="35%">具体专业名称</th>
+                            <th width="10%">学制</th>
+                            <th width="15%">学费参考</th>
+                            <th width="25%">申请截止时间</th>
+                            <th width="15%">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${majors.map(m => `
+                            <tr>
+                                <td><b>${m.cn}</b><br><small style="color:#999">${m.en}</small></td>
+                                <td>${m.dur}年</td>
+                                <td style="font-family:monospace; font-weight:bold;">${m.fee}</td>
+                                <td style="color:#E74C3C; font-weight:bold; white-space:pre-wrap;">${m.dl}</td>
+                                <td><span style="color:var(--m-green-dark); cursor:pointer; font-weight:bold;" onclick='openDetail(${JSON.stringify(m).replace(/'/g, "&apos;")})'>详情介绍</span></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+        
+        function openDetail(m) {
+            document.getElementById('detailModal').style.display = 'flex';
+            document.getElementById('d_uni_fac').innerText = m.uni + " / " + m.fac;
+            document.getElementById('d_cn').innerText = m.cn;
+            document.getElementById('d_en').innerText = m.en;
+            document.getElementById('d_metrics').innerHTML = `
+                <div style="background:#F0FFF4; padding:8px 18px; border-radius:50px; font-size:12px; font-weight:bold; border:1px solid var(--m-green);">学制: ${m.dur}年</div>
+                <div style="background:#F0FFF4; padding:8px 18px; border-radius:50px; font-size:12px; font-weight:bold; border:1px solid var(--m-green);">授课语言: ${m.lang}</div>
+            `;
+            document.getElementById('d_req').innerText = m.req;
+            document.getElementById('d_struct').innerText = m.struct;
+            document.getElementById('d_memo').innerText = m.memo || "无特殊备注";
+        }
+        
+        function closeDetail() { document.getElementById('detailModal').style.display = 'none'; }
+        function closeOverlay() { document.getElementById('fullOverlay').style.display = 'none'; }
+    </script>
+</body>
+
+</html>
