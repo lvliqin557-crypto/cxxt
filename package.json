@@ -1,0 +1,12 @@
+{
+  "name": "school-search-system",
+  "version": "1.0.0",
+  "description": "新东方查校系统",
+  "scripts": {
+    "build-css": "npx tailwindcss -i ./src/input.css -o ./output.css --minify",
+    "watch-css": "npx tailwindcss -i ./src/input.css -o ./output.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0"
+  }
+}

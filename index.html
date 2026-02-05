@@ -4,7 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>新东方查校系统 - 亚洲留学专业查询</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {},
+            },
+            corePlugins: {
+                preflight: true,
+            }
+        }
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -597,8 +607,39 @@
 
         const schoolData = {};
 
+        const schoolFileNameMap = {
+            '香港大学': 'HKU',
+            '香港中文大学': 'CUHK',
+            '香港科技大学': 'HKUST',
+            '香港理工大学': 'PolyU',
+            '香港城市大学': 'CityU',
+            '香港浸会大学': 'HKBU',
+            '岭南大学': 'Lingnan',
+            '香港教育大学': 'EdUHK',
+            '香港都会大学': 'HKMU',
+            '香港树仁大学': 'SYU',
+            '香港恒生大学': 'HSUHK',
+            '香港珠海学院': 'CHC',
+            '香港高等教育科技学院': 'THEi',
+            '香港科技大学（广州）': 'HKUST-GZ',
+            '香港中文大学（深圳）': 'CUHK-SZ',
+            '香港城市大学（东莞）': 'CityU-DG',
+            '北师香港浸会大学': 'UIC',
+            '新加坡国立大学': 'NUS',
+            '南洋理工大学': 'NTU',
+            '新加坡管理大学': 'SMU',
+            '新加坡科技设计大学': 'SUTD',
+            '新加坡理工大学': 'SIT',
+            '新跃社科大学': 'SUSS',
+            '澳门大学': 'UM',
+            '澳门科技大学': 'MUST',
+            '澳门城市大学': 'CityU-Macau',
+            '澳门理工大学': 'MPU'
+        };
+
         async function loadSchoolData(schoolName) {
-            const fileName = './' + schoolName + '.json';
+            const fileNameBase = schoolFileNameMap[schoolName] || schoolName;
+            const fileName = './' + fileNameBase + '.json';
             console.log('Attempting to load:', fileName);
             try {
                 const response = await fetch(fileName);
@@ -606,7 +647,9 @@
                 if (!response.ok) {
                     throw new Error('File not found');
                 }
-                const data = await response.json();
+                const text = await response.text();
+                console.log('Response text length:', text.length);
+                const data = JSON.parse(text);
                 schoolData[schoolName] = data;
                 console.log('Data loaded successfully for:', schoolName, 'Total programs:', data.length);
                 return data;
