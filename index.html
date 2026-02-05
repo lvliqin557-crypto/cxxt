@@ -3,255 +3,1722 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>重庆亚英 · 全球院校智能查询系统</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>新东方查校系统 - 亚洲留学专业查询</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #51CF66;
-            --primary-dark: #2B8A3E;
-            --bg: #F8FAF9;
-            --white: #FFFFFF;
-            --text: #2D3436;
-            --accent: #E67E22;
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 0;
         }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif; }
-        body { background: var(--bg); color: var(--text); line-height: 1.6; }
-
-        /* 导航布局 */
-        nav {
-            background: var(--white);
-            padding: 15px 40px;
+        .search-box {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        .search-box:focus-within {
+            border-color: #ff6b35;
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+        }
+        .region-tag {
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        .region-tag:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .region-tag.active {
+            background: #ff6b35 !important;
+            color: white !important;
+            border-color: #ff6b35;
+        }
+        .result-item {
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+        .result-item:hover {
+            background: #fff8f5;
+            border-left-color: #ff6b35;
+        }
+        .checkbox-custom {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            justify-content: center;
+            flex-shrink: 0;
         }
-        .logo { font-weight: 900; color: var(--primary); font-size: 22px; display: flex; align-items: center; gap: 10px; }
-        .nav-tools { display: flex; gap: 20px; align-items: center; }
-
-        /* 搜索与筛选 */
-        select, .search-input {
-            padding: 10px 18px;
-            border-radius: 50px;
-            border: 1px solid #E2E8F0;
-            outline: none;
+        .checkbox-custom.checked {
+            background: #ff6b35;
+            border-color: #ff6b35;
+        }
+        .checkbox-custom.checked::after {
+            content: "✓";
+            color: white;
             font-size: 14px;
-            transition: 0.3s;
+            font-weight: bold;
         }
-        select:focus, .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(81, 207, 102, 0.1); }
-        .search-input { width: 300px; }
-
-        /* 核心内容区 */
-        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
-        .school-info-card { background: white; padding: 25px; border-radius: 20px; margin-bottom: 25px; border-left: 6px solid var(--primary); display: none; }
-
-        /* 数据表格 */
-        .table-container { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #F7FAFC; padding: 18px; text-align: left; font-size: 13px; color: #718096; text-transform: uppercase; }
-        td { padding: 20px 18px; border-bottom: 1px solid #F1F3F5; }
-        tr:hover { background-color: #F8FBF8; }
-
-        /* 标签与按钮 */
-        .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-right: 5px; font-weight: bold; }
-        .tag-green { background: #EBFBEE; color: #2B8A3E; }
-        .tag-orange { background: #FFF4E6; color: #D9480F; }
-        .btn-detail { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 50px; cursor: pointer; font-size: 12px; transition: 0.3s; }
-        .btn-detail:hover { background: var(--primary-dark); transform: scale(1.05); }
-
-        /* 详情弹窗 */
-        #detailModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; backdrop-filter: blur(8px); justify-content: center; align-items: center; }
-        .modal-box { background: white; width: 90%; max-width: 850px; max-height: 85vh; border-radius: 28px; overflow: hidden; display: flex; flex-direction: column; animation: slideUp 0.3s ease; }
-        .modal-header { padding: 30px; border-bottom: 1px solid #EEE; background: #FDFDFD; position: relative; }
-        .modal-body { padding: 35px; overflow-y: auto; flex: 1; }
-        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-        /* 弹窗内容排版 */
-        .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px; }
-        .info-pill { background: #F8FAF9; padding: 15px; border-radius: 15px; border: 1px solid #EDF2F7; }
-        .pill-label { font-size: 11px; color: #A0AEC0; margin-bottom: 4px; }
-        .pill-value { font-weight: bold; font-size: 14px; }
-        .req-section { background: #FFF5F5; border-radius: 15px; padding: 25px; border-left: 5px solid #FF6B6B; margin-top: 20px; white-space: pre-wrap; }
-
-        /* 加载状态 */
-        .loader { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 3000; }
+        .school-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .school-item:hover {
+            background-color: #f9fafb;
+        }
+        .major-tag {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .major-tag:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .detail-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            background: white;
+            overflow-y: auto;
+        }
+        .detail-modal.active {
+            display: block;
+        }
+        .school-detail-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        .school-detail-overlay.active {
+            display: block;
+        }
+        .school-detail-header {
+            background: white;
+            color: #1f2937;
+            padding: 20px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .school-detail-header h2 {
+            margin: 0;
+            font-size: 1.8rem;
+            flex: 1;
+        }
+        .school-detail-header p {
+            margin: 5px 0 0 0;
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+        .school-detail-content {
+            padding: 20px;
+            max-width: 1400px;
+            margin: auto;
+        }
+        .school-info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .school-info-table th, .school-info-table td {
+            padding: 15px;
+            border: 1px solid #e9ecef;
+            text-align: left;
+            vertical-align: top;
+        }
+        .school-info-table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        .school-intro {
+            line-height: 1.8;
+            text-align: justify;
+            margin-bottom: 20px;
+        }
+        .close-school-detail {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255,255,255,0.3);
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .close-school-detail:hover {
+            background: rgba(255,255,255,0.5);
+        }
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .detail-modal.active {
+            display: flex;
+        }
+        .detail-content {
+            background: white;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            border-radius: 12px;
+            overflow: hidden;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .selected-item {
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
     </style>
 </head>
-<body>
-
-    <div class="loader" id="pageLoader"><i class="fas fa-circle-notch fa-spin fa-3x" style="color:var(--primary)"></i></div>
-
-    <nav>
-        <div class="logo"><i class="fas fa-leaf"></i> 重庆亚英院校库</div>
-        <div class="nav-tools">
-            <select id="schoolSelector" onchange="loadData(this.value)">
-                <option value="">-- 选择目标院校 --</option>
-                <optgroup label="香港地区">
-                    <option value="HKU">香港大学 (HKU)</option>
-                    <option value="CUHK">香港中文大学 (CUHK)</option>
-                    <option value="HKUST">香港科技大学 (HKUST)</option>
-                    <option value="PolyU">香港理工大学 (PolyU)</option>
-                </optgroup>
-                <optgroup label="新加坡地区">
-                    <option value="NUS">新加坡国立大学 (NUS)</option>
-                    <option value="NTU">南洋理工大学 (NTU)</option>
-                </optgroup>
-            </select>
-            <input type="text" id="searchInput" class="search-input" placeholder="输入关键字搜索专业..." oninput="filterData()">
+<body class="min-h-screen">
+    <!-- Header -->
+    <header style="background: white; border-bottom: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <div style="max-width: 1400px; margin: 0 auto; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #ff6b35, #dc2626); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px;">
+                    新
+                </div>
+                <div>
+                    <h1 style="font-size: 20px; font-weight: bold; color: #1f2937; margin: 0;">新东方查校系统</h1>
+                    <p style="font-size: 12px; color: #6b7280; margin: 4px 0 0 0;">亚洲留学专业查询平台</p>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <button style="color: #4b5563; font-size: 14px; font-weight: 500; background: none; border: none; cursor: pointer;">使用指南</button>
+                <button style="background: #ff6b35; color: white; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; border: none; cursor: pointer;">登录/注册</button>
+            </div>
         </div>
-    </nav>
+    </header>
 
-    <div class="container">
-        <div id="schoolHeader" class="school-info-card">
-            <h1 id="titleSchool" style="font-size: 28px; margin-bottom: 5px;"></h1>
-            <p id="subCount" style="color: #666; font-size: 14px;"></p>
-        </div>
+    <div style="max-width: 1400px; margin: 0 auto; padding: 24px;">
+        <div style="display: grid; grid-template-columns: 1fr 300px; gap: 24px;">
+            
+            <!-- Middle - Results -->
+            <div style="background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); min-height: 800px; display: flex; flex-direction: column;">
+                
+                <!-- Results Header -->
+                <div style="padding: 20px; border-bottom: 1px solid #f3f4f6;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                        <div>
+                            <h2 style="font-size: 18px; font-weight: bold; color: #1f2937; margin: 0;" id="resultsTitle">高校排名</h2>
+                            <p style="font-size: 14px; color: #6b7280; margin: 4px 0 0 0;" id="resultsSubtitle">共 <span style="color: #ff6b35; font-weight: bold;">27</span> 所高校</p>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px;" id="sortOptions">
+                            <select style="padding: 6px 12px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 14px; outline: none;">
+                                <option>综合排序</option>
+                                <option>学费从低到高</option>
+                                <option>学费从高到低</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Search Filters -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <!-- Major Search -->
+                        <div style="background: #f9fafb; border-radius: 8px; padding: 12px;">
+                            <h3 style="font-weight: bold; color: #1f2937; margin: 0 0 8px 0; font-size: 14px;">专业搜索</h3>
+                            <div class="search-box" style="display: flex; align-items: center; padding: 8px 10px; background: white; border-radius: 6px; border: 1px solid #e5e7eb;">
+                                <svg width="16" height="16" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24" style="margin-right: 8px;">
+                                    <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                                <input type="text" placeholder="输入专业名称..." style="flex: 1; border: none; outline: none; font-size: 14px;" oninput="filterMajors(this.value)">
+                            </div>
+                        </div>
 
-        <div class="table-container">
-            <table id="mainTable">
-                <thead>
-                    <tr>
-                        <th width="40%">专业方向</th>
-                        <th width="20%">语言要求</th>
-                        <th width="20%">申请截止</th>
-                        <th width="20%">操作</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                    <tr><td colspan="4" style="text-align:center; padding:100px; color:#999;">请在上方选择一所院校开始查询</td></tr>
-                </tbody>
-            </table>
+                        <!-- Language Filter -->
+                        <div style="background: #f9fafb; border-radius: 8px; padding: 12px;">
+                            <h3 style="font-weight: bold; color: #1f2937; margin: 0 0 8px 0; font-size: 14px;">语言条件</h3>
+                            <div style="display: flex; gap: 8px;">
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; flex: 1; padding: 8px; background: white; border: 1px solid #e5e7eb; border-radius: 6px;">
+                                    <div class="checkbox-custom" onclick="toggleCheckbox(this)"></div>
+                                    <span style="font-size: 13px; color: #374151;">六级成绩可申</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; flex: 1; padding: 8px; background: white; border: 1px solid #e5e7eb; border-radius: 6px;">
+                                    <div class="checkbox-custom" onclick="toggleCheckbox(this)"></div>
+                                    <span style="font-size: 13px; color: #374151;">无需语言可申</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results List -->
+                <div style="flex: 1;" id="resultsList">
+                </div>
+            </div>
+
+            <!-- Right Sidebar -->
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                
+                <!-- Selected Preview -->
+                <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <h3 style="font-weight: bold; color: #1f2937; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                        <svg width="20" height="20" fill="none" stroke="#ff6b35" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                        </svg>
+                        方案预览
+                        <span style="margin-left: auto; font-size: 12px; background: #fff7ed; color: #c2410c; padding: 4px 8px; border-radius: 12px;" id="selectedCount">已选 0 项</span>
+                    </h3>
+                    
+                    <div style="min-height: 150px; max-height: 350px; overflow-y: auto;" id="selectedList">
+                        <div style="text-align: center; color: #9ca3af; padding: 40px 0; font-size: 14px;">
+                            <svg width="48" height="48" fill="none" stroke="#d1d5db" stroke-width="1.5" viewBox="0 0 24 24" style="margin: 0 auto 8px auto;">
+                                <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            暂无选中专业<br>
+                            <span style="font-size: 12px;">点击左侧列表选择感兴趣的专业</span>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #f3f4f6; display: flex; flex-direction: column; gap: 8px;">
+                        <button onclick="exportToPDF()" style="width: 100%; background: #1f2937; color: white; padding: 10px; border-radius: 8px; font-size: 14px; font-weight: 500; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            导出 PDF
+                        </button>
+                        <button onclick="exportToExcel()" style="width: 100%; background: #16a34a; color: white; padding: 10px; border-radius: 8px; font-size: 14px; font-weight: 500; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            导出 Excel
+                        </button>
+                        <button onclick="exportToPNG()" style="width: 100%; border: 1px solid #d1d5db; color: #374151; padding: 10px; border-radius: 8px; font-size: 14px; font-weight: 500; background: white; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            导出 PNG 图片
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div style="background: linear-gradient(135deg, #ff6b35, #dc2626); border-radius: 12px; padding: 20px; color: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <h3 style="font-weight: bold; margin-bottom: 16px;">申请助手</h3>
+                    <div style="display: flex; flex-direction: column; gap: 12px; font-size: 14px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="opacity: 0.9;">平均学费</span>
+                            <span style="font-weight: bold;">HK$380,000</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="opacity: 0.9;">雅思要求</span>
+                            <span style="font-weight: bold;">6.0-7.0</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="opacity: 0.9;">申请成功率</span>
+                            <span style="font-weight: bold;">35%</span>
+                        </div>
+                    </div>
+                    <button style="width: 100%; margin-top: 16px; background: white; color: #ff6b35; padding: 10px; border-radius: 8px; font-size: 14px; font-weight: bold; border: none; cursor: pointer;">
+                        获取申请建议
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div id="detailModal" onclick="if(event.target==this) closeModal()">
-        <div class="modal-box">
-            <div class="modal-header">
-                <i class="fas fa-times" style="position:absolute; top:30px; right:30px; cursor:pointer; color:#CCC;" onclick="closeModal()"></i>
-                <h2 id="pop_cn" style="color:var(--primary);"></h2>
-                <div id="pop_en" style="color:#A0AEC0; font-size:15px; margin-top:5px;"></div>
+    <!-- School Detail Modal -->
+    <div class="school-detail-overlay" id="schoolDetailOverlay" onclick="hideSchoolDetail()"></div>
+
+    <div class="detail-modal" id="schoolDetailModal">
+        <button class="close-school-detail" onclick="hideSchoolDetail()">×</button>
+        <div class="school-detail-header">
+            <div style="width: 80px; height: 80px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); flex-shrink: 0;">
+                <svg width="48" height="48" viewBox="0 0 100 100" fill="none">
+                    <circle cx="50" cy="50" r="45" fill="#007bff"/>
+                    <text x="50" y="65" text-anchor="middle" fill="white" font-size="24" font-weight="bold">港大</text>
+                </svg>
             </div>
-            <div class="modal-body">
-                <div class="info-grid">
-                    <div class="info-pill"><div class="pill-label">所属学院</div><div class="pill-value" id="pop_fac"></div></div>
-                    <div class="info-pill"><div class="pill-label">参考学费</div><div class="pill-value" id="pop_fee"></div></div>
-                    <div class="info-pill"><div class="pill-label">学制</div><div class="pill-value" id="pop_dur"></div></div>
-                    <div class="info-pill"><div class="pill-label">雅思要求</div><div class="pill-value" id="pop_ielts" style="color:var(--primary-dark)"></div></div>
-                    <div class="info-pill"><div class="pill-label">托福要求</div><div class="pill-value" id="pop_toefl"></div></div>
-                    <div class="info-pill"><div class="pill-label">所在学校</div><div class="pill-value" id="pop_uni"></div></div>
+            <div style="flex: 1;">
+                <h2 id="schoolDetailTitle">香港大学</h2>
+                <p id="schoolDetailSubtitle">The University of Hong Kong</p>
+            </div>
+        </div>
+        <div class="school-detail-content">
+            <section>
+                <h2 style="font-size: 1.8rem; border-bottom: 3px solid #007bff; padding-bottom: 10px; margin-bottom: 20px;">学校介绍</h2>
+                <p class="school-intro">
+                    香港大学 (The University of Hong Kong)，简称"港大 (HKU)"，是中国的一所国际化公立研究型大学，通常被认为是亚洲最具名望的大学之一，有亚洲"常春藤"之称，其前身为香港西医书院。香港大学奠基于1910年3月16日，次年3月30日正式注册成立，是中国香港历史最悠久的高等教育机构。香港大学自创校以来始终采用英语教学，其学术研究多可与欧美无缝对接、良性互动，也得益于此，在很长一段时间里，以医学、商科、人文、政法等领域见长的香港大学都是中国高等教育界一面独特的旗帜，享誉亚洲乃至世界。香港大学为环太平洋大学联盟、松联盟、Universitas 21、中国大学校长联谊会、粤港澳高校联盟、京港大学联盟、沪港大学联盟成员，AACSB及EQUIS双重认证成员，是全球第一个界定出SARS病原体的科研单位。
+                </p>
+            </section>
+
+            <section style="margin-top: 30px;">
+                <h2 style="font-size: 1.8rem; border-bottom: 3px solid #007bff; padding-bottom: 10px; margin-bottom: 20px;">学院设置</h2>
+                <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
+                    <button style="padding: 10px 20px; border: 1px solid #ddd; background-color: #f8f9fa; cursor: pointer; border-radius: 5px; font-size: 1rem;">建筑学院</button>
+                    <button style="padding: 10px 20px; border: 1px solid #ddd; background-color: #f8f9fa; cursor: pointer; border-radius: 5px; font-size: 1rem;">文学院</button>
+                    <button style="padding: 10px 20px; border: 1px solid #ddd; background-color: #f8f9fa; cursor: pointer; border-radius: 5px; font-size: 1rem;">经济管理学院</button>
+                    <button style="padding: 10px 20px; border: 1px solid #ddd; background-color: #f8f9fa; cursor: pointer; border-radius: 5px; font-size: 1rem;">牙医学院</button>
+                    <button style="padding: 10px 20px; border: 1px solid #ddd; background-color: #f8f9fa; cursor: pointer; border-radius: 5px; font-size: 1rem;">教育学院</button>
+                    <button style="padding: 10px 20px; border: 1px solid #ddd; background-color: #f8f9fa; cursor: pointer; border-radius: 5px; font-size: 1rem;">工程学院</button>
+                    <button style="padding: 10px 20px; border: 1px solid #ddd; background-color: #f8f9fa; cursor: pointer; border-radius: 5px; font-size: 1rem;">法学院</button>
+                    <button style="padding: 10px 20px; border: 1px solid #ddd; background-color: #f8f9fa; cursor: pointer; border-radius: 5px; font-size: 1rem;">李嘉诚医学院</button>
+                    <button style="padding: 10px 20px; border: 1px solid #ddd; background-color: #f8f9fa; cursor: pointer; border-radius: 5px; font-size: 1rem;">理学院</button>
+                    <button style="padding: 10px 20px; border: 1px solid #ddd; background-color: #f8f9fa; cursor: pointer; border-radius: 5px; font-size: 1rem;">社会科学学院</button>
                 </div>
+            </section>
 
-                <h4 style="margin-bottom:12px;"><i class="fas fa-graduation-cap"></i> 学术与背景要求 (Academic Requirements)</h4>
-                <div class="req-section" id="pop_req"></div>
+            <section style="margin-top: 30px;">
+                <h2 style="font-size: 1.8rem; border-bottom: 3px solid #007bff; padding-bottom: 10px; margin-bottom: 20px;">热门专业</h2>
+                <table class="school-info-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 20%;">专业名称</th>
+                            <th style="width: 10%;">语言要求</th>
+                            <th style="width: 12%;">截止时间</th>
+                            <th style="width: 10%;">GRE/GMAT</th>
+                            <th style="width: 10%;">学制</th>
+                            <th style="width: 12%;">学费</th>
+                            <th style="width: 26%;">项目详情</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </section>
 
-                <h4 style="margin-top:30px; margin-bottom:12px;"><i class="fas fa-history"></i> 申请轮次与截止时间</h4>
-                <div style="background:#F8FAF9; padding:20px; border-radius:15px; font-size:13px; line-height:1.8;" id="pop_dead"></div>
-
-                <div style="margin-top:40px; text-align:center;">
-                    <a id="pop_url" target="_blank" style="display:inline-block; padding:15px 50px; background:var(--primary); color:white; text-decoration:none; border-radius:50px; font-weight:bold; box-shadow: 0 10px 20px rgba(81,207,102,0.2);">访问大学官网申请页面</a>
-                </div>
+            <div style="text-align: center; margin-top: 30px;">
+                <button onclick="hideSchoolDetail()" style="padding: 10px 20px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 5px; font-size: 1rem; cursor: pointer; border: none;">关闭</button>
             </div>
         </div>
     </div>
 
+    <!-- Detail Modal -->
+    <div class="detail-modal" id="detailModal" onclick="if(event.target === this) closeModal()">
+        <div class="detail-content">
+            <div style="background: linear-gradient(135deg, #ff6b35, #dc2626); padding: 24px; color: white; display: flex; justify-content: space-between; align-items: start;">
+                <div>
+                    <h2 style="font-size: 24px; font-weight: bold; margin: 0;" id="modalTitle">经济学硕士</h2>
+                    <p style="margin: 4px 0 0 0; opacity: 0.9;" id="modalSubtitle">Master of Economics</p>
+                </div>
+                <button onclick="closeModal()" style="background: none; border: none; color: white; cursor: pointer; font-size: 24px; line-height: 1;">×</button>
+            </div>
+            <div style="padding: 24px; max-height: 60vh; overflow-y: auto;">
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px;">
+                    <div style="background: #f9fafb; padding: 16px; border-radius: 8px;">
+                        <span style="font-size: 12px; color: #6b7280; display: block; margin-bottom: 4px;">所属院校</span>
+                        <span style="font-weight: 600; color: #1f2937;">香港大学 - 经管学院</span>
+                    </div>
+                    <div style="background: #f9fafb; padding: 16px; border-radius: 8px;">
+                        <span style="font-size: 12px; color: #6b7280; display: block; margin-bottom: 4px;">学制</span>
+                        <span style="font-weight: 600; color: #1f2937;">1年全日制 / 2年兼读制</span>
+                    </div>
+                    <div style="background: #f9fafb; padding: 16px; border-radius: 8px;">
+                        <span style="font-size: 12px; color: #6b7280; display: block; margin-bottom: 4px;">学费</span>
+                        <span style="font-weight: 600; color: #ff6b35;">HK$360,000</span>
+                    </div>
+                    <div style="background: #f9fafb; padding: 16px; border-radius: 8px;">
+                        <span style="font-size: 12px; color: #6b7280; display: block; margin-bottom: 4px;">申请截止</span>
+                        <span style="font-weight: 600; color: #1f2937;">提前批：2025-07-25<br>正式批：2025-10-03</span>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 24px;">
+                    <h3 style="font-weight: bold; color: #1f2937; margin-bottom: 12px;">语言要求</h3>
+                    <div style="display: flex; gap: 12px;">
+                        <span style="padding: 8px 16px; background: #dbeafe; color: #1e40af; border-radius: 20px; font-size: 14px;">雅思 6.0（各项不低于5.5）</span>
+                        <span style="padding: 8px 16px; background: #dbeafe; color: #1e40af; border-radius: 20px; font-size: 14px;">托福 80</span>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 24px;">
+                    <h3 style="font-weight: bold; color: #1f2937; margin-bottom: 12px;">专业概况</h3>
+                    <p style="color: #4b5563; font-size: 14px; line-height: 1.6;">
+                        旨在向学生介绍经济学的前沿发展，并让他们掌握先进的分析工具。课程提供三个专修方向：数据分析（Data Analysis）、政策分析（Policy Analysis）或学术理论（Theory），培养学生在经济理论和实证分析方面的深厚基础。
+                    </p>
+                </div>
+
+                <div style="margin-bottom: 24px;">
+                    <h3 style="font-weight: bold; color: #1f2937; margin-bottom: 12px;">课程结构</h3>
+                    <div style="background: #f9fafb; padding: 16px; border-radius: 8px; color: #4b5563; font-size: 14px; line-height: 1.6;">
+                        <strong>学生须完成10门课程（共60学分）：</strong><br><br>
+                        <strong>核心课程（3门，18学分）：</strong><br>
+                        • 微观经济学（Microeconomic Theory）<br>
+                        • 宏观经济学（Macroeconomic Theory）<br>
+                        • 计量经济学（Econometric Theory）<br><br>
+                        <strong>方向专修课程（4门，24学分）</strong><br>
+                        <strong>选修课程（3门，18学分）</strong>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 style="font-weight: bold; color: #1f2937; margin-bottom: 12px;">申请要求</h3>
+                    <ul style="color: #4b5563; font-size: 14px; line-height: 1.6; padding-left: 20px;">
+                        <li>持有认可的学士学位或同等学历</li>
+                        <li>本科成绩优异（通常要求3.0/4.0以上）</li>
+                        <li>良好的数学或统计学基础</li>
+                        <li>不需要GMAT/GRE，但良好成绩会被优先考虑</li>
+                        <li>可能有面试</li>
+                    </ul>
+                </div>
+            </div>
+            <div style="padding: 16px 24px; border-top: 1px solid #f3f4f6; background: #f9fafb; display: flex; justify-content: flex-end; gap: 12px;">
+                <button onclick="closeModal()" style="padding: 10px 20px; color: #6b7280; font-weight: 500; border: none; background: transparent; cursor: pointer;">关闭</button>
+                <button style="padding: 10px 20px; background: #ff6b35; color: white; border-radius: 8px; font-weight: 500; border: none; cursor: pointer;">加入对比</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
     <script>
-        let currentData = [];
+        let selectedItems = new Set();
+        
+        const programData = {
+            1: { name: '经济学硕士', nameEn: 'Master of Economics', school: '香港大学', faculty: '经管学院', tuition: '360000', ielts: '6.0', toefl: '80', duration: '1年', deadline: '2025-10-03', status: '热招中' },
+            2: { name: '市场营销硕士', nameEn: 'Master of Science in Marketing', school: '香港大学', faculty: '经管学院', tuition: '360000', ielts: '6.0', toefl: '80', duration: '1年', deadline: '2025-10-03', status: '热招中' },
+            3: { name: '会计硕士', nameEn: 'Master of Accounting', school: '香港大学', faculty: '经管学院', tuition: '360000', ielts: '6.0', toefl: '80', duration: '1年', deadline: '2025-10-03', status: '名额紧张' },
+            4: { name: '商业分析理学硕士', nameEn: 'Master of Science in Business Analytics', school: '香港大学', faculty: '经管学院', tuition: '420000', ielts: '6.0', toefl: '80', duration: '1年', deadline: '2025-10-03', status: '热招中' },
+            5: { name: '金融学硕士', nameEn: 'Master of Finance', school: '香港大学', faculty: '经管学院', tuition: '462000', ielts: '6.0', toefl: '80', duration: '1年', deadline: '2025-10-03', status: '竞争激烈' },
+            6: { name: '计算机科学硕士', nameEn: 'Master of Computer Science', school: '香港中文大学', faculty: '工程学院', tuition: '280000', ielts: '6.5', toefl: '85', duration: '1年', deadline: '2025-11-15', status: '热招中' },
+            7: { name: '金融工程硕士', nameEn: 'MSc in Financial Engineering', school: '香港中文大学', faculty: '商学院', tuition: '380000', ielts: '6.5', toefl: '85', duration: '1年', deadline: '2025-10-30', status: '热招中' },
+            8: { name: '电子工程硕士', nameEn: 'MSc in Electronic Engineering', school: '香港科技大学', faculty: '工程学院', tuition: '320000', ielts: '6.5', toefl: '85', duration: '1年', deadline: '2025-12-01', status: '名额紧张' },
+            9: { name: '数据科学硕士', nameEn: 'MSc in Data Science', school: '香港科技大学', faculty: '理学院', tuition: '350000', ielts: '6.5', toefl: '85', duration: '1年', deadline: '2025-11-30', status: '热招中' },
+            10: { name: '工商管理硕士', nameEn: 'Master of Business Administration', school: '新加坡国立大学', faculty: '商学院', tuition: '650000', ielts: '7.0', toefl: '100', duration: '1.5年', deadline: '2025-09-30', status: '竞争激烈' },
+            11: { name: '人工智能硕士', nameEn: 'MSc in Artificial Intelligence', school: '新加坡国立大学', faculty: '计算机学院', tuition: '450000', ielts: '6.5', toefl: '90', duration: '1年', deadline: '2025-10-15', status: '热招中' },
+            12: { name: '金融科技硕士', nameEn: 'MSc in Financial Technology', school: '南洋理工大学', faculty: '商学院', tuition: '420000', ielts: '6.5', toefl: '90', duration: '1年', deadline: '2025-10-31', status: '名额紧张' }
+        };
 
-        // 核心异步加载函数
-        async function loadData(code) {
-            if (!code) return;
-            const loader = document.getElementById('pageLoader');
-            loader.style.display = 'block';
+        const schoolRankings = {
+            singapore: [
+                { rank: 1, name: '新加坡国立大学', worldRank: 8, region: '🇸🇬 新加坡' },
+                { rank: 2, name: '南洋理工大学', worldRank: 11, region: '🇸🇬 新加坡' },
+                { rank: 3, name: '新加坡管理大学', worldRank: 545, region: '🇸🇬 新加坡' },
+                { rank: 4, name: '新加坡科技设计大学', worldRank: 600, region: '🇸🇬 新加坡' },
+                { rank: 5, name: '新加坡理工大学', worldRank: 650, region: '🇸🇬 新加坡' },
+                { rank: 6, name: '新跃社科大学', worldRank: 700, region: '🇸🇬 新加坡' }
+            ],
+            hongkong: [
+                { rank: 1, name: '香港大学', worldRank: 17, region: '🇭🇰 香港' },
+                { rank: 2, name: '香港中文大学', worldRank: 36, region: '🇭🇰 香港' },
+                { rank: 3, name: '香港科技大学', worldRank: 47, region: '🇭🇰 香港' },
+                { rank: 4, name: '香港理工大学', worldRank: 57, region: '🇭🇰 香港' },
+                { rank: 5, name: '香港城市大学', worldRank: 62, region: '🇭🇰 香港' },
+                { rank: 6, name: '香港浸会大学', worldRank: 295, region: '🇭🇰 香港' },
+                { rank: 7, name: '岭南大学', worldRank: 600, region: '🇭🇰 香港' },
+                { rank: 8, name: '香港教育大学', worldRank: 650, region: '🇭🇰 香港' },
+                { rank: 9, name: '香港都会大学', worldRank: 700, region: '🇭🇰 香港' },
+                { rank: 10, name: '香港树仁大学', worldRank: 750, region: '🇭🇰 香港' },
+                { rank: 11, name: '香港恒生大学', worldRank: 800, region: '🇭🇰 香港' },
+                { rank: 12, name: '香港珠海学院', worldRank: 850, region: '🇭🇰 香港' },
+                { rank: 13, name: '香港高等教育科技学院', worldRank: 900, region: '🇭🇰 香港' },
+                { rank: 14, name: '香港科技大学（广州）', worldRank: 1000, region: '🇭🇰 香港' },
+                { rank: 15, name: '香港中文大学（深圳）', worldRank: 1000, region: '🇭🇰 香港' },
+                { rank: 16, name: '香港城市大学（东莞）', worldRank: 1000, region: '🇭🇰 香港' },
+                { rank: 17, name: '北师香港浸会大学', worldRank: 1000, region: '🇭🇰 香港' }
+            ],
+            macau: [
+                { rank: 1, name: '澳门大学', worldRank: 180, region: '🇲🇴 澳门' },
+                { rank: 2, name: '澳门科技大学', worldRank: 392, region: '🇲🇴 澳门' },
+                { rank: 3, name: '澳门城市大学', worldRank: 800, region: '🇲🇴 澳门' },
+                { rank: 4, name: '澳门理工大学', worldRank: 900, region: '🇲🇴 澳门' }
+            ]
+        };
 
+        const schoolNamesEn = {
+            '新加坡国立大学': 'National University of Singapore',
+            '南洋理工大学': 'Nanyang Technological University',
+            '新加坡管理大学': 'Singapore Management University',
+            '新加坡科技设计大学': 'Singapore University of Technology and Design',
+            '新加坡理工大学': 'Singapore Institute of Technology',
+            '新跃社科大学': 'Singapore University of Social Sciences',
+            '香港大学': 'The University of Hong Kong',
+            '香港中文大学': 'The Chinese University of Hong Kong',
+            '香港科技大学': 'The Hong Kong University of Science and Technology',
+            '香港理工大学': 'The Hong Kong Polytechnic University',
+            '香港城市大学': 'City University of Hong Kong',
+            '香港浸会大学': 'Hong Kong Baptist University',
+            '岭南大学': 'Lingnan University',
+            '香港教育大学': 'The Education University of Hong Kong',
+            '香港都会大学': 'Hong Kong Metropolitan University',
+            '香港树仁大学': 'Hong Kong Shue Yan University',
+            '香港恒生大学': 'Hang Seng Management College',
+            '香港珠海学院': 'Chu Hai College of Higher Education',
+            '香港高等教育科技学院': 'Technological and Higher Education Institute of Hong Kong',
+            '香港科技大学（广州）': 'HKUST (Guangzhou)',
+            '香港中文大学（深圳）': 'CUHK (Shenzhen)',
+            '香港城市大学（东莞）': 'CityU (Dongguan)',
+            '北师香港浸会大学': 'Beijing Normal University - Hong Kong Baptist University',
+            '澳门大学': 'University of Macau',
+            '澳门科技大学': 'Macau University of Science and Technology',
+            '澳门城市大学': 'City University of Macau',
+            '澳门理工大学': 'Macao Polytechnic University'
+        };
+
+        const schoolData = {};
+
+        async function loadSchoolData(schoolName) {
+            const fileName = schoolName + '.json';
             try {
-                // 读取 GitHub 仓库中 data 文件夹下的 JSON
-                const response = await fetch(`./data/${code}.json`);
-                if (!response.ok) throw new Error("该校数据库尚未建立");
-                
-                currentData = await response.json();
-                
-                // 更新 UI
-                document.getElementById('schoolHeader').style.display = 'block';
-                document.getElementById('titleSchool').innerText = currentData[0].uni;
-                document.getElementById('subCount').innerText = `已成功同步云端数据库，共发现 ${currentData.length} 个最新招生项目`;
-                
-                renderTable(currentData);
-            } catch (err) {
-                alert(err.message);
-            } finally {
-                loader.style.display = 'none';
+                const response = await fetch(fileName);
+                if (!response.ok) {
+                    throw new Error('File not found');
+                }
+                const data = await response.json();
+                schoolData[schoolName] = data;
+                return data;
+            } catch (error) {
+                console.error('Error loading school data:', error);
+                return null;
             }
         }
 
-        // 渲染列表函数
-        function renderTable(data) {
-            const tbody = document.getElementById('tableBody');
-            if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:50px;">未找到匹配的数据</td></tr>';
+        async function goToSchoolDetail(schoolName) {
+            document.getElementById('schoolDetailTitle').textContent = schoolName;
+            document.getElementById('schoolDetailSubtitle').textContent = schoolNamesEn[schoolName] || '';
+            
+            const data = await loadSchoolData(schoolName);
+            
+            if (data) {
+                renderSchoolDetail(data);
+            }
+            
+            document.getElementById('schoolDetailModal').classList.add('active');
+            document.getElementById('schoolDetailOverlay').classList.add('active');
+        }
+                {
+                    "uni":  "香港大学",
+                    "fac":  "经管学院",
+                    "en":  "Master of Economics",
+                    "cn":  "经济学硕士",
+                    "req_academic":  "持有认可的学士学位或同等学历；本科成绩优异（通常要求3.0/4.0以上）；学术成绩单需显示良好的数学或统计学基础（修读过微积分、线性代数、概率统计）；非经济学背景申请者也欢迎申请，但需具备量化分析能力；不需要GMAT/GRE，但良好成绩会被优先考虑；可能有面试",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "提前批：2025-07-25\n正式批第一轮：2025-10-03\n第二轮：待定（视名额而定）",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$360,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "经管学院",
+                    "en":  "Master of Science in Marketing",
+                    "cn":  "市场营销硕士",
+                    "req_academic":  "持有认可的学士学位或同等学历；不限本科专业，欢迎商科、文科、理科及工程背景申请者；不需要GMAT/GRE，但良好成绩会被优先考虑；具备营销相关经验（实习或工作）者优先；可能有面试",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "提前批：2025-07-25\n正式批第一轮：2025-10-03\n第二轮：待定",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$360,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "经管学院",
+                    "en":  "Master of Accounting",
+                    "cn":  "会计硕士",
+                    "req_academic":  "持有认可的学士学位或同等学历；不限本科专业，欢迎非会计背景申请者（非商科背景学生可能需要补修基础课程）；不需要GMAT/GRE成绩，但良好成绩会被优先考虑；对本科专业没有具体要求；可能有面试",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "提前批：2025-07-25\n正式批第一轮：2025-10-03\n第二轮：待定",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$360,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "经管学院",
+                    "en":  "Master of Science in Business Analytics",
+                    "cn":  "商业分析理学硕士",
+                    "req_academic":  "持有认可的学士学位或同等学历；具备较强的数学、统计或编程基础（修读过微积分、线性代数、概率论、统计学，掌握至少一门编程语言如Python/R/Java/C++）；不需要GMAT/GRE，但良好成绩有助于申请；理工科背景（数学、统计、计算机、工程）或商科量化背景（金融工程、计量经济）优先；可能有面试",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "提前批：2025-07-25\n正式批第一轮：2025-10-03\n第二轮：待定",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$420,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "经管学院",
+                    "en":  "Master of Finance",
+                    "cn":  "金融学硕士",
+                    "req_academic":  "持有认可的学士学位或同等学历；具备良好数学和统计基础（修读过微积分、线性代数、概率论、统计学）；不需要GMAT/GRE，但良好成绩（建议GMAT 700+）会被优先考虑；金融、经济、数学、统计、工程、物理背景优先；可能有面试",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "提前批：2025-07-25\n正式批第一轮：2025-10-03\n第二轮：待定",
+                    "duration":  "全日制1年",
+                    "fee":  "HK$462,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "经管学院",
+                    "en":  "Master of Global Management",
+                    "cn":  "全球管理硕士",
+                    "req_academic":  "持有认可的学士学位或同等学历；不限本科专业；具备良好沟通能力和国际视野；不需要GMAT/GRE，但良好成绩会被优先考虑；有国际交流、海外实习或跨国工作经验者优先；可能有面试",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "提前批：2025-07-25\n正式批第一轮：2025-10-03\n第二轮：待定",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$390,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "经管学院",
+                    "en":  "Master of Finance in Financial Technology",
+                    "cn":  "金融科技硕士",
+                    "req_academic":  "持有认可的学士学位或同等学历；具有计算机科学、工程学、数学、物理学、统计学或科技相关背景的申请者优先考虑；不需要GMAT/GRE成绩，但良好的GMAT/GRE成绩会被优先考虑；申请人可能需要提交视频介绍（Video Introduction）作为补充材料，阐述申请动机和背景；具备编程基础（Python/Java/C++）和数学基础（线性代数、概率论）是必须的；可能有面试",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "提前批：2025-07-25\n正式批第一轮：2025-10-03\n第二轮：待定",
+                    "duration":  "全日制1年",
+                    "fee":  "HK$462,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "经管学院",
+                    "en":  "Master of Business Administration (Full-time)",
+                    "cn":  "工商管理硕士（全日制）",
+                    "req_academic":  "持有认可的学士学位；至少2年全职工作经验（平均录取工作经验5-7年，但优秀申请者2年也可考虑）；GMAT/GRE成绩（建议GMAT 650-700分，虽为可选但强烈建议提交，有助于申请和奖学金评定）；雅思6.5（单项不低于5.5）或托福80；需要通过面试（通常2-3轮，包括校友面试）；重视申请者的领导潜力、国际视野和职业目标清晰度",
+                    "req_ielts":  "6.5（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "分四轮申请：\n第一轮：2025-09-??\n第二轮：2026-01-??\n第三轮：2026-03-??\n第四轮：2026-05-??\n（具体日期请查阅官网）",
+                    "duration":  "1年全日制",
+                    "fee":  "HK$588,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "经管学院（与复旦大学管理学院合作）",
+                    "en":  "Master of Business Administration (International) - HKU-Fudan IMBA",
+                    "cn":  "港大-复旦IMBA项目",
+                    "req_academic":  "学士学位且全职工作满3年（算到入学当年9月）；或硕士及以上学位且全职工作满2年；需通过面试和笔试（笔试为中文案例分析，面试为中文+英文）；具备良好的职业发展记录和管理潜力；雇主推荐优先",
+                    "req_ielts":  "不强制要求，但需具备良好英语沟通能力（课程为双语教学，部分教材和案例为英文）",
+                    "req_toefl":  "不强制要求",
+                    "deadline":  "2025-09-07（首轮截止，滚动招生）",
+                    "duration":  "2年（兼读制）",
+                    "fee":  "RMB 549,800",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "经管学院",
+                    "en":  "Executive Master of Business Administration (EMBA)",
+                    "cn":  "高级工商管理硕士",
+                    "req_academic":  "持有香港大学认可的学士学位或同等学历；拥有至少8年管理工作经验（其中至少5年为高级管理经验）；若学位非英语授课，需通过英语资格考试（或提供雅思/托福成绩）；通过面试和资料审核；通常为企业高管、企业家或专业人士",
+                    "req_ielts":  "不强制要求，但需通过英语资格考试（如学位非英语授课）",
+                    "req_toefl":  "不强制要求，但需通过英语资格考试",
+                    "deadline":  "滚动招生，招满即止，建议尽早申请",
+                    "duration":  "2年（兼读制）",
+                    "fee":  "HK$1,060,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "经管学院",
+                    "en":  "Master of Family Wealth Management",
+                    "cn":  "家族财富管理硕士",
+                    "req_academic":  "持有认可的学士学位或同等学历；具备相关工作经验优先（如金融、法律、会计、咨询、家族企业管理）；不需要GMAT/GRE；可能需要面试；非英语授课学位需提供英语成绩；对家族财富管理有浓厚兴趣并清晰职业规划",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "正式批第一轮：2025-10-03\n第二轮：待定",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$420,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "经管学院",
+                    "en":  "Master of Wealth Management",
+                    "cn":  "财富管理硕士",
+                    "req_academic":  "持有认可的学士学位或同等学历；具备良好数学和分析能力；不需要GMAT/GRE，但良好成绩会被优先考虑；不限本科专业，欢迎金融、经济、数学、工程、计算机等背景申请者；有金融实习或工作经验者优先",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "正式批第一轮：2025-10-03\n第二轮：待定",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$420,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "经管学院",
+                    "en":  "Master of Sustainable Accounting and Finance",
+                    "cn":  "可持续会计与金融硕士",
+                    "req_academic":  "持有认可的学士学位或同等学历；不需要GMAT/GRE，但良好成绩会被优先考虑；不限本科专业，欢迎金融、会计、经济、环境科学、工程等背景申请者；对ESG和可持续发展有浓厚兴趣；有可持续发展相关实习或工作经验者优先",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "正式批第一轮：2025-10-03\n第二轮：待定",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$462,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "经管学院",
+                    "en":  "Master of Accounting Analytics",
+                    "cn":  "会计分析硕士",
+                    "req_academic":  "持有认可的学士学位或同等学历；具备良好量化分析能力；不需要GMAT/GRE，但良好成绩会被优先考虑；不限本科专业，欢迎会计、金融、商业、计算机、数学、工程等背景申请者；有会计或数据分析相关经验者优先",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "正式批第一轮：2025-10-03\n第二轮：待定",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$360,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "经管学院",
+                    "en":  "Master of Business Administration (Part-time) - Weekly/Weekend Mode",
+                    "cn":  "工商管理硕士（兼读制）",
+                    "req_academic":  "持有认可的学士学位；至少2年全职工作经验；GMAT/GRE成绩可选但有助于申请（建议650+）；雅思6.5（单项不低于5.5）或托福80；通过面试；目前在职且有管理经验者优先",
+                    "req_ielts":  "6.5（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "分多轮申请，建议尽早申请（通常截止日期为1月、3月、5月滚动）",
+                    "duration":  "2年（兼读制，可延长至4年）",
+                    "fee":  "HK$510,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "经管学院",
+                    "en":  "Master of Business Administration (Part-time GBA Mode)",
+                    "cn":  "工商管理硕士（兼读制，大湾区模式）",
+                    "req_academic":  "持有认可的学士学位；至少2年全职工作经验；GMAT/GRE成绩可选但有助于申请；雅思6.0（单项不低于5.5）或托福80（较普通兼读制MBA英语要求略低）；通过面试；目前在大湾区工作的在职人士优先",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "滚动招生，招满即止（通常建议提前3-6个月申请）",
+                    "duration":  "2年（兼读制）",
+                    "fee":  "HK$510,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "经管学院",
+                    "en":  "Executive Master of Business Administration (General/International Stream)",
+                    "cn":  "高级管理人员工商管理学硕士（综合班/环球班）",
+                    "req_academic":  "持有认可的学士学位或同等学历；拥有至少8年管理工作经验；若学位非英语授课需通过英语资格考试；通过面试和资料审核",
+                    "req_ielts":  "不强制要求，但需通过英语资格考试",
+                    "req_toefl":  "不强制要求，但需通过英语资格考试",
+                    "deadline":  "滚动招生，招满即止",
+                    "duration":  "2年（兼读制）",
+                    "fee":  "HK$1,060,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "经管学院",
+                    "en":  "Master of Artificial Intelligence in Business",
+                    "cn":  "商业人工智能硕士",
+                    "req_academic":  "持有认可的学士学位或同等学历；具备中级水平的IT/IS或商业知识（通过本科相关课程或工作经验证明，如修读过编程、数据库、统计学或商业管理课程）；不需要GMAT/GRE；可能有面试；具备基础编程能力（Python优先）和数学基础（线性代数、概率论）有助于学习",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "正式批第一轮：2025-10-03\n第二轮：待定",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$360,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "工程学院",
+                    "en":  "Master of Science in Engineering (Electrical and Electronic Engineering)",
+                    "cn":  "电气与电子工程硕士",
+                    "req_academic":  "持有工程或计算机科学学士学位或同等学历；具备相关领域学术背景；本科成绩良好（通常要求2:1荣誉或相当水平）",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "第一轮：2026-01-02\n第二轮：2026-04-10",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$320,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "工程学院",
+                    "en":  "Master of Science in Engineering (Energy Engineering)",
+                    "cn":  "能源工程硕士",
+                    "req_academic":  "持有工程或相关科学学士学位或同等学历；具备相关领域学术背景；热力学与流体力学基础优先",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "第一轮：2026-01-02\n第二轮：2026-04-10",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$320,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "工程学院",
+                    "en":  "Master of Science in Engineering (Mechanical Engineering)",
+                    "cn":  "机械工程硕士",
+                    "req_academic":  "持有机械工程、制造工程、工程管理、材料科学与工程、电气与电子工程、土木工程、环境工程或相关学科学士学位；或具备同等学历；本科成绩良好",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "第一轮：2026-01-02\n第二轮：2026-04-10",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$320,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "工程学院",
+                    "en":  "Master of Science in Engineering (Industrial Engineering and Logistics Management)",
+                    "cn":  "工业工程与物流管理硕士",
+                    "req_academic":  "持有工程、科学、数学、统计学、商业研究或相关学科学士学位；或具备同等学历；具备良好数学基础（微积分、线性代数、概率统计）",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "第一轮：2026-01-02\n第二轮：2026-04-10",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$320,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "工程学院",
+                    "en":  "Master of Science in Engineering (Civil Engineering) - Environmental Engineering Stream",
+                    "cn":  "土木工程（环境工程方向）硕士",
+                    "req_academic":  "持有土木工程、环境工程、化学工程、机械工程、环境相关科学、计算机科学、数学或统计学学士学位；或具备同等学历",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "第一轮：2026-01-02\n第二轮：2026-04-10",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$320,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "工程学院",
+                    "en":  "Master of Science in Engineering (Civil Engineering) - Geotechnical Engineering Stream",
+                    "cn":  "土木工程（岩土工程方向）硕士",
+                    "req_academic":  "持有土木工程、地质工程或相关学科学士学位；或具备同等学历；具备土力学基础优先",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "第一轮：2026-01-02\n第二轮：2026-04-10",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$320,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "工程学院",
+                    "en":  "Master of Science in Engineering (Infrastructure Engineering and Management)",
+                    "cn":  "基建工程与管理硕士",
+                    "req_academic":  "持有建筑学、土木工程、计算机科学、建筑管理、电气与电子工程、工业与系统工程、机械工程、智能建造、结构工程、测量学、交通工程或城市规划学士学位；或具备同等学历",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "第一轮：2026-01-02\n第二轮：2026-04-10",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$320,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "工程学院",
+                    "en":  "Master of Science in Engineering (Civil Engineering) - Structural Engineering Stream",
+                    "cn":  "土木工程（结构工程）硕士",
+                    "req_academic":  "持有土木工程、结构工程或相关学科学士学位；或具备同等学历；具备结构力学基础优先",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "第一轮：2026-01-02\n第二轮：2026-04-10",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$320,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "工程学院",
+                    "en":  "Master of Science in Engineering (Building Services Engineering)",
+                    "cn":  "建筑设备工程硕士",
+                    "req_academic":  "持有建筑服务工程、机械工程、电气工程、土木工程或相关学科学士学位；或具备同等学历",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "第一轮：2026-01-02\n第二轮：2026-04-10",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$320,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "工程学院",
+                    "en":  "Master of Science in Engineering (Innovative Design and Technology)",
+                    "cn":  "创新设计与技术工程硕士",
+                    "req_academic":  "持有工程或相关科学学科学士学位；或具备同等学历；具备设计基础或工程背景；需要提交作品集（如有设计经验）",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "第一轮：2026-01-02\n第二轮：2026-04-10",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$320,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "工程学院",
+                    "en":  "Master of Science in Engineering (Civil Engineering) - General Stream",
+                    "cn":  "土木工程（通用方向）硕士",
+                    "req_academic":  "持有土木工程、环境工程、化学工程、机械工程、环境相关科学、计算机科学、数学或统计学学士学位；或具备同等学历",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "第一轮：2026-01-02\n第二轮：2026-04-10",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$320,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "工程学院",
+                    "en":  "Master of Science in Engineering (Microelectronics Science and Technology)",
+                    "cn":  "微电子科学与技术硕士",
+                    "req_academic":  "持有工程或相关科学学科学士学位；优先考虑电子工程、微电子、物理、材料科学背景；本科成绩良好",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "第一轮：2026-01-02\n第二轮：2026-04-10",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$320,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "工程学院",
+                    "en":  "Master of Science in Engineering (Robotics and Intelligent Systems)",
+                    "cn":  "机器人与智能系统硕士",
+                    "req_academic":  "持有工程或相关科学学科学士学位；优先考虑机械、电子、计算机、自动化背景；具备编程基础（Python/C++）和数学基础（线性代数、概率论）",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "第一轮：2026-01-02\n第二轮：2026-04-10",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$320,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "工程学院",
+                    "en":  "Master of Science in Engineering (Low-Altitude Technology)",
+                    "cn":  "低空科技硕士",
+                    "req_academic":  "持有工程或相关科学学科学士学位；优先考虑航空、机械、电子、自动化背景；对低空经济有浓厚兴趣",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "第一轮：2026-01-02\n第二轮：2026-04-10",
+                    "duration":  "全日制1.5年（仅全日制）",
+                    "fee":  "HK$375,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "工程学院",
+                    "en":  "Master of Science in Engineering (Integrated Circuits and Electronic Systems)",
+                    "cn":  "集成电路与电子系统硕士",
+                    "req_academic":  "持有电子工程、工程科学或物理科学学士学位，二级荣誉或更高；或具备同等学历；具备电路分析、电子学、数字逻辑基础",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "第一轮：2026-01-02\n第二轮：2026-04-10",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$375,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "文学院",
+                    "en":  "Master of Arts in Applied Linguistics",
+                    "cn":  "应用语言学硕士",
+                    "req_academic":  "持有认可的学士学位或同等学历；具备相关学术背景（语言学、英语、教育）或工作经验（语言教学）优先；本科成绩良好（通常要求3.0/4.0以上）；部分申请者可能需要参加写作测试或面试",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "第一轮：2025-12-29\n第二轮：2026-02-24",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$255,440",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "文学院",
+                    "en":  "Master of Arts in Linguistics",
+                    "cn":  "语言学硕士",
+                    "req_academic":  "持有认可的学士学位或同等学历；主修语言学或密切相关学科（英语、中文、翻译）；具备良好学术成绩（荣誉学位优先）；本科课程需包含语言学基础课程（语音学、音系学、句法学）",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "截止：2026-03-31",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$260,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "文学院",
+                    "en":  "Master of Arts in English Studies",
+                    "cn":  "英语研究硕士",
+                    "req_academic":  "持有英语或密切相关学科的良好学士学位；荣誉学位（二级甲等或以上）优先；需提交个人陈述（阐述研究方向兴趣）和学术写作样本（英文论文，约2000-3000字）；可能需要参加面试；英语写作能力要求极高",
+                    "req_ielts":  "7.0（各项不低于5.5）",
+                    "req_toefl":  "80（写作25分或以上）",
+                    "deadline":  "第一轮：2025-11-28\n第二轮：2026-03-20",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$263,200",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "文学院",
+                    "en":  "Master of Arts in Art History",
+                    "cn":  "艺术史硕士",
+                    "req_academic":  "持有艺术史专业学士学位，或其他学科但具备丰富艺术相关经验（如博物馆实习、画廊工作）；需提交写作样本（艺术史相关论文）；可能需要参加面试；具备基础艺术史知识（熟悉主要艺术流派和时期）",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "第一轮：2025-12-31\n第二轮：2026-03-02\n第三轮：2026-05-04",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$280,800",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "文学院",
+                    "en":  "Master of Buddhist Counselling",
+                    "cn":  "佛学咨询硕士",
+                    "req_academic":  "持有香港大学佛学硕士学位或同等学历；或完成\"佛学基础课程\"并通过资格考试；具备相关工作经验（辅导、社工、医疗、教育）优先；需要面试；对佛教有真诚信仰或浓厚兴趣，愿意进行个人修行",
+                    "req_ielts":  "不强制要求，但需具备良好英语能力（课程主要用英语和粤语授课）",
+                    "req_toefl":  "不强制要求",
+                    "deadline":  "主轮：2026-02-27",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$176,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "文学院",
+                    "en":  "Master of Arts in Literary and Cultural Studies",
+                    "cn":  "文学与文化研究硕士",
+                    "req_academic":  "持有任何学科的良好学士学位；不需要特定专业背景，欢迎文学、传媒、社会学、人类学背景；可能需要参加资格考试（测试批判性写作能力）和面试；对文化研究有浓厚兴趣，具备基础理论知识",
+                    "req_ielts":  "7.0（各项不低于5.5）",
+                    "req_toefl":  "80（写作25分）",
+                    "deadline":  "第一轮：2026-01-02\n第二轮：2026-03-27",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$255,440",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "文学院",
+                    "en":  "Master of Buddhist Studies",
+                    "cn":  "佛学研究硕士",
+                    "req_academic":  "持有认可的学士学位或同等学历；具备佛学相关背景（如修读佛学课程）或通过佛学基础资格考试；欢迎不同专业背景但对佛学有浓厚兴趣的申请者；出家人和居士均可申请；需要面试",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "第一轮：2025-12-12\n第二轮：2026-02-27",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$170,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "文学院",
+                    "en":  "Master of Fine Arts in Creative Writing in English",
+                    "cn":  "英语创意写作硕士",
+                    "req_academic":  "持有任何学科的良好学士学位；需提交原创作品样本（Fiction或Poetry，约10-15页，双倍行距）；提交个人陈述（写作动机、阅读经历、职业目标）；提交写作计划书（Proposal）；入围者需参加面试（可能包含现场写作测试）；鼓励文科及艺术类背景申请者，但非必需",
+                    "req_ielts":  "7.0（各项不低于5.5）",
+                    "req_toefl":  "80（写作25分）",
+                    "deadline":  "第一轮：2025-11-28\n第二轮：2026-03-20",
+                    "duration":  "全日制1年",
+                    "fee":  "HK$298,700",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "文学院",
+                    "en":  "Master of Arts in Chinese Language and Literature",
+                    "cn":  "中国语言文学硕士",
+                    "req_academic":  "持有中文或密切相关学科的良好学士学位；具备扎实的中文阅读写作能力（繁体字和简体字）；可能需要参加资格考试或面试；本科成绩良好；具备相关工作经验（教育、出版）者优先",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "第一轮：2026-01-29\n第二轮：2026-04-30",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$222,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "文学院",
+                    "en":  "Master of Arts in Creative Communications",
+                    "cn":  "创意传播硕士",
+                    "req_academic":  "持有任何学科的良好学士学位；需提交创意个人陈述（500-750字，展示创意思维）；提交作品集（PDF不超过12页，展示写作、设计、视频或其他创意作品）；入围者需参加面试；不限专业背景，但需展示对创意传播的热情和潜力",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "第一轮：2025-11-28\n第二轮：2026-03-20",
+                    "duration":  "全日制1年",
+                    "fee":  "HK$280,800",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "文学院",
+                    "en":  "Master of Arts in Hong Kong History",
+                    "cn":  "香港史硕士",
+                    "req_academic":  "持有历史专业学士学位，或其他学科但具备历史学习经验（修读过历史课程）；本科成绩至少3.0/4.0（或二级乙等荣誉）；不符合成绩要求者需提交补充说明（解释学术背景和研究能力）；需要提交写作样本（历史论文）；可能需要面试",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "主轮：2026-05-05",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$240,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "文学院",
+                    "en":  "Master of Arts in Music Studies",
+                    "cn":  "音乐研究硕士",
+                    "req_academic":  "持有音乐专业学士学位，或其他学科但具备音乐学习经验（修读音乐课程、具备演奏/作曲经验）；需要提交作品集（作曲方向提交乐谱，表演方向提交演奏录音，研究方向提交论文）；可能需要参加面试（面试可能包含音乐理论测试）；具备基础音乐理论（乐理、和声）和音乐史知识",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "主轮：2026-04-30",
+                    "duration":  "全日制1年",
+                    "fee":  "HK$260,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "文学院",
+                    "en":  "Master of Arts in Museum Studies",
+                    "cn":  "博物馆研究硕士",
+                    "req_academic":  "持有博物馆研究或艺术史专业学士学位，或密切相关学科（考古学、历史学、文学、人类学、文化研究）；具备艺术与文化产业背景申请者优先；需要提交个人陈述和写作样本；可能需要参加面试；具备博物馆实习经验者优先",
+                    "req_ielts":  "7.0（各项不低于5.5）",
+                    "req_toefl":  "80（写作25分）",
+                    "deadline":  "主轮：2026-05-15",
+                    "duration":  "全日制1年",
+                    "fee":  "HK$320,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "文学院",
+                    "en":  "Master of Arts in Chinese Historical Studies",
+                    "cn":  "中国历史研究硕士",
+                    "req_academic":  "持有认可的学士学位或同等学历；具备历史学习背景或修读过中国历史课程；可能需要参加资格考试（测试古文阅读能力）或面试；本科成绩良好；对历史研究有真诚兴趣",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "第一轮：2026-02-02\n第二轮：2026-04-30",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$222,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "文学院",
+                    "en":  "Master of Arts in AI, Ethics and Society",
+                    "cn":  "人工智能、伦理与社会硕士",
+                    "req_academic":  "持有哲学专业学士学位，或其他学科但具备AI、伦理与社会相关研究经验（修读相关课程或工作经验）；欢迎跨学科背景（计算机、社会学、法学、伦理学）申请者；需要提交个人陈述（阐述对AI伦理的兴趣）；部分申请者可能需要参加面试",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "第一轮：2026-01-23\n第二轮：2026-04-30\n第三轮：2026-06-30",
+                    "duration":  "全日制1年",
+                    "fee":  "HK$283,400",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "文学院",
+                    "en":  "Master of Arts in Translation",
+                    "cn":  "翻译硕士",
+                    "req_academic":  "持有认可的学士学位或同等学历；具备等同职业资格者也可考虑；需要参加入学资格考试（笔试，测试中英互译能力）或面试；良好的双语能力（中文和英文），母语为中文者需优秀英文能力，母语为英文者需优秀中文能力；具备翻译经验者优先",
+                    "req_ielts":  "7.0（各项不低于6.0）",
+                    "req_toefl":  "80（写作25分）",
+                    "deadline":  "第一轮：2026-02-02\n第二轮：2026-04-30",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$222,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "文学院",
+                    "en":  "Master of Arts in Philosophy, Politics and Economics",
+                    "cn":  "哲学、政治与经济学硕士",
+                    "req_academic":  "持有哲学、政治或经济学相关专业学士学位，或其他学科但具备相关学习经验（修读PPE相关课程）；欢迎跨学科背景申请者；本科成绩良好；需要提交个人陈述（阐述跨学科兴趣）；部分申请者可能需要参加面试",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "第一轮：2026-01-23\n第二轮：2026-04-30\n第三轮：2026-06-30",
+                    "duration":  "全日制1年",
+                    "fee":  "HK$283,400",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "文学院",
+                    "en":  "Master of Arts in European Studies",
+                    "cn":  "欧洲研究硕士",
+                    "req_academic":  "持有欧洲研究或相关学科（人类学、文化研究、历史、语言学、文学、媒体研究、政治学、社会学）学士学位；需具备法语、德语、西班牙语B2.2/C1水平，或俄语TORFL II/III水平；需要提交语言成绩证明；可能需要参加面试；对欧洲研究有浓厚兴趣",
+                    "req_ielts":  "7.0（各项不低于5.5）",
+                    "req_toefl":  "80（写作25分）",
+                    "deadline":  "第一轮：2026-03-30\n第二轮：2026-05-04",
+                    "duration":  "全日制1年",
+                    "fee":  "HK$280,800",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "文学院",
+                    "en":  "Master of Arts in East Asian Studies",
+                    "cn":  "东亚研究硕士",
+                    "req_academic":  "持有认可的学士学位或同等学历；具备相关区域研究背景（修读亚洲研究、国际关系、历史等课程）者优先；欢迎不同专业背景但对东亚研究有浓厚兴趣的申请者；需要提交个人陈述；部分申请者可能需要参加面试",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "第一轮：2026-02-02\n第二轮：2026-04-30",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$222,000",
+                    "url":  ""
+                },
+                {
+                    "uni":  "香港大学",
+                    "fac":  "文学院",
+                    "en":  "Master of Arts in Hong Kong Culture Studies",
+                    "cn":  "香港文化研究硕士",
+                    "req_academic":  "持有认可的学士学位或同等学历；具备文化研究、文学、社会学、人类学等相关背景（修读相关课程）者优先；欢迎不同专业背景但对香港文化有浓厚兴趣的申请者；需要提交个人陈述；部分申请者可能需要参加面试",
+                    "req_ielts":  "6.0（各项不低于5.5）",
+                    "req_toefl":  "80",
+                    "deadline":  "第一轮：2026-02-02\n第二轮：2026-04-30",
+                    "duration":  "全日制1年\n",
+                    "fee":  "HK$222,000",
+                    "url":  ""
+                }
+            ]
+        };
+
+        async function goToSchoolDetail(schoolName) {
+            document.getElementById('schoolDetailTitle').textContent = schoolName;
+            document.getElementById('schoolDetailSubtitle').textContent = schoolNamesEn[schoolName] || '';
+            
+            const data = schoolData[schoolName];
+            
+            if (data) {
+                renderSchoolDetail(data);
+            }
+            
+            document.getElementById('schoolDetailModal').classList.add('active');
+            document.getElementById('schoolDetailOverlay').classList.add('active');
+        }
+
+        function renderSchoolDetail(data) {
+            const faculties = [...new Set(data.map(item => item.fac))];
+            const facultiesContainer = document.querySelector('.school-detail-content section:nth-of-type(2) div');
+            
+            if (facultiesContainer) {
+                facultiesContainer.innerHTML = faculties.map(fac => 
+                    `<button onclick="filterByFaculty('${fac}')" style="padding: 10px 20px; border: 1px solid #ddd; background-color: #f8f9fa; cursor: pointer; border-radius: 5px; font-size: 1rem;">${fac}</button>`
+                ).join('');
+            }
+            
+            const tableBody = document.querySelector('.school-info-table tbody');
+            if (tableBody) {
+                tableBody.innerHTML = data.map(item => `
+                    <tr>
+                        <td>${item.cn}</td>
+                        <td>${item.req_ielts}</td>
+                        <td>${item.deadline.replace(/\n/g, '<br>')}</td>
+                        <td>不要求</td>
+                        <td>${item.duration.replace(/\n/g, '<br>')}</td>
+                        <td>${item.fee}</td>
+                        <td><a href="#" style="color: #007bff;">查看详情</a></td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        function filterByFaculty(faculty) {
+            const tableBody = document.querySelector('.school-info-table tbody');
+            if (tableBody && schoolData[document.getElementById('schoolDetailTitle').textContent]) {
+                const filteredData = schoolData[document.getElementById('schoolDetailTitle').textContent].filter(item => item.fac === faculty);
+                tableBody.innerHTML = filteredData.map(item => `
+                    <tr>
+                        <td>${item.cn}</td>
+                        <td>${item.req_ielts}</td>
+                        <td>${item.deadline.replace(/\n/g, '<br>')}</td>
+                        <td>不要求</td>
+                        <td>${item.duration.replace(/\n/g, '<br>')}</td>
+                        <td>${item.fee}</td>
+                        <td><a href="#" style="color: #007bff;">查看详情</a></td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        function selectRegion(element, region) {
+            document.querySelectorAll('.region-tag').forEach(tag => {
+                tag.classList.remove('active');
+                tag.style.background = '#f3f4f6';
+                tag.style.color = '#374151';
+            });
+            element.classList.add('active');
+            element.style.background = '#ff6b35';
+            element.style.color = 'white';
+            
+            if (region === 'all') {
+                renderSchoolRankings();
+            } else {
+                renderResults(programData);
+            }
+        }
+
+        function renderSchoolRankings() {
+            const resultsList = document.getElementById('resultsList');
+            const titleElement = document.getElementById('resultsTitle');
+            const subtitleElement = document.getElementById('resultsSubtitle');
+            const sortOptions = document.getElementById('sortOptions');
+            
+            if (titleElement) titleElement.textContent = '高校排名';
+            if (subtitleElement) subtitleElement.innerHTML = '共 <span style="color: #ff6b35; font-weight: bold;">27</span> 所高校';
+            if (sortOptions) sortOptions.style.display = 'none';
+
+            resultsList.innerHTML = `
+                <div style="padding: 30px 20px;">
+                    <div style="margin-bottom: 40px;">
+                        <h3 style="font-size: 20px; font-weight: bold; color: #1f2937; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 24px;">🇸🇬</span>
+                            新加坡高校排名
+                        </h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+                            ${schoolRankings.singapore.map((school, index) => `
+                                <div style="display: flex; align-items: center; padding: 16px; background: ${index === 0 ? '#fff7ed' : 'white'}; border: ${index === 0 ? '2px solid #fed7aa' : '1px solid #f3f4f6'}; border-radius: 8px; transition: all 0.2s; cursor: pointer;" onclick="goToSchoolDetail('${school.name}')">
+                                    <div style="width: 40px; height: 40px; background: ${index === 0 ? '#ff6b35' : index === 1 ? '#f59e0b' : '#fbbf24'}; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; margin-right: 16px;">${school.rank}</div>
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: bold; color: #1f2937; font-size: 16px; margin-bottom: 4px;">${school.name}</div>
+                                        <div style="font-size: 13px; color: #6b7280;">${school.region} · 世界排名: <span style="color: #ff6b35; font-weight: bold;">#${school.worldRank}</span></div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 40px;">
+                        <h3 style="font-size: 20px; font-weight: bold; color: #1f2937; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 24px;">🇭🇰</span>
+                            香港高校排名
+                        </h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+                            ${schoolRankings.hongkong.map((school, index) => `
+                                <div style="display: flex; align-items: center; padding: 16px; background: ${index === 0 ? '#fff7ed' : 'white'}; border: ${index === 0 ? '2px solid #fed7aa' : '1px solid #f3f4f6'}; border-radius: 8px; transition: all 0.2s; cursor: pointer;" onclick="goToSchoolDetail('${school.name}')">
+                                    <div style="width: 40px; height: 40px; background: ${index === 0 ? '#ff6b35' : index === 1 ? '#f59e0b' : index === 2 ? '#fbbf24' : '#d1d5db'}; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; margin-right: 16px;">${school.rank}</div>
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: bold; color: #1f2937; font-size: 16px; margin-bottom: 4px;">${school.name}</div>
+                                        <div style="font-size: 13px; color: #6b7280;">${school.region} · 世界排名: <span style="color: #ff6b35; font-weight: bold;">#${school.worldRank}</span></div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 style="font-size: 20px; font-weight: bold; color: #1f2937; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 24px;">🇲🇴</span>
+                            澳门高校排名
+                        </h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+                            ${schoolRankings.macau.map((school, index) => `
+                                <div style="display: flex; align-items: center; padding: 16px; background: ${index === 0 ? '#fff7ed' : 'white'}; border: ${index === 0 ? '2px solid #fed7aa' : '1px solid #f3f4f6'}; border-radius: 8px; transition: all 0.2s; cursor: pointer;" onclick="goToSchoolDetail('${school.name}')">
+                                    <div style="width: 40px; height: 40px; background: ${index === 0 ? '#ff6b35' : index === 1 ? '#f59e0b' : '#d1d5db'}; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; margin-right: 16px;">${school.rank}</div>
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: bold; color: #1f2937; font-size: 16px; margin-bottom: 4px;">${school.name}</div>
+                                        <div style="font-size: 13px; color: #6b7280;">${school.region} · 世界排名: <span style="color: #ff6b35; font-weight: bold;">#${school.worldRank}</span></div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function goToSchoolDetail(schoolName) {
+            document.getElementById('schoolDetailTitle').textContent = schoolName;
+            document.getElementById('schoolDetailModal').classList.add('active');
+            document.getElementById('schoolDetailOverlay').classList.add('active');
+        }
+
+        function hideSchoolDetail() {
+            document.getElementById('schoolDetailModal').classList.remove('active');
+            document.getElementById('schoolDetailOverlay').classList.remove('active');
+        }
+
+        function toggleCheckbox(element) {
+            element.classList.toggle('checked');
+        }
+
+        function toggleSelection(element, id) {
+            element.classList.toggle('checked');
+            if (element.classList.contains('checked')) {
+                selectedItems.add(id);
+            } else {
+                selectedItems.delete(id);
+            }
+            updateSelectedList();
+        }
+
+        function filterSchools(keyword) {
+            const resultsList = document.getElementById('resultsList');
+            const countElement = document.querySelector('#resultsList').parentElement.querySelector('p span');
+            
+            if (!keyword || keyword.trim() === '') {
+                renderSchoolRankings();
                 return;
             }
 
-            tbody.innerHTML = data.map(m => `
-                <tr>
-                    <td>
-                        <div style="font-weight:bold; font-size:15px;">${m.cn}</div>
-                        <div style="font-size:12px; color:#999; margin-top:3px;">${m.en}</div>
-                        <div style="margin-top:6px;">
-                            <span class="tag tag-green">${m.fac}</span>
-                            ${m.cn.includes('作品集') ? '<span class="tag tag-orange">需要作品集</span>' : ''}
+            const filteredData = {};
+            Object.keys(programData).forEach(id => {
+                const item = programData[id];
+                if (item.school.includes(keyword) || item.name.includes(keyword)) {
+                    filteredData[id] = item;
+                }
+            });
+
+            renderResults(filteredData);
+        }
+
+        function filterMajors(keyword) {
+            const resultsList = document.getElementById('resultsList');
+            
+            if (!keyword || keyword.trim() === '') {
+                renderSchoolRankings();
+                return;
+            }
+
+            const filteredData = {};
+            Object.keys(programData).forEach(id => {
+                const item = programData[id];
+                if (item.name.includes(keyword) || item.faculty.includes(keyword)) {
+                    filteredData[id] = item;
+                }
+            });
+
+            renderResults(filteredData);
+        }
+
+        function renderResults(data) {
+            const resultsList = document.getElementById('resultsList');
+            const countElement = document.querySelector('#resultsList').parentElement.querySelector('p span');
+            const count = Object.keys(data).length;
+            
+            if (countElement) {
+                countElement.textContent = count;
+            }
+
+            if (count === 0) {
+                resultsList.innerHTML = `
+                    <div style="padding: 60px 20px; text-align: center; color: #9ca3af;">
+                        <svg width="64" height="64" fill="none" stroke="#d1d5db" stroke-width="1.5" viewBox="0 0 24 24" style="margin: 0 auto 16px auto;">
+                            <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        <p style="font-size: 16px; margin-bottom: 8px;">未找到相关结果</p>
+                        <p style="font-size: 14px;">请尝试其他搜索关键词</p>
+                    </div>
+                `;
+                return;
+            }
+
+            resultsList.innerHTML = Object.keys(data).map(id => {
+                const item = data[id];
+                
+                return `
+                    <div class="result-item" style="padding: 20px; border-bottom: 1px solid #f3f4f6;">
+                        <div style="display: flex; align-items: start; justify-content: space-between; margin-bottom: 12px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div class="checkbox-custom" onclick="toggleSelection(this, ${id})"></div>
+                                <div>
+                                    <h3 style="font-weight: bold; color: #1f2937; font-size: 16px; margin: 0;">${item.name}</h3>
+                                    <p style="font-size: 13px; color: #6b7280; margin: 4px 0 0 0; font-style: italic;">${item.nameEn}</p>
+                                </div>
+                            </div>
+                            <span style="padding: 4px 12px; background: #dbeafe; color: #1e40af; border-radius: 20px; font-size: 12px; font-weight: 500;">${item.faculty}</span>
                         </div>
-                    </td>
-                    <td>
-                        <div style="font-size:13px; font-weight:bold; color:var(--primary-dark)">IELTS: ${m.req_ielts || '官网为准'}</div>
-                        <div style="font-size:11px; color:#AAA; margin-top:2px;">TOEFL: ${m.req_toefl || '-'}</div>
-                    </td>
-                    <td>
-                        <div style="font-size:12px; color:var(--accent); font-weight:bold;">${m.deadline.substring(0,10)}...</div>
-                        <div style="font-size:11px; color:#BBB;">${m.duration}</div>
-                    </td>
-                    <td>
-                        <button class="btn-detail" onclick="openDetail('${m.en}')">详情要求</button>
-                    </td>
-                </tr>
-            `).join('');
+                        
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 12px; margin-left: 32px;">
+                            <div>
+                                <span style="font-size: 12px; color: #9ca3af; display: block; margin-bottom: 2px;">院校</span>
+                                <span style="font-size: 14px; color: #374151; font-weight: 500;">${item.school}</span>
+                            </div>
+                            <div>
+                                <span style="font-size: 12px; color: #9ca3af; display: block; margin-bottom: 2px;">学制</span>
+                                <span style="font-size: 14px; color: #374151; font-weight: 500;">${item.duration}</span>
+                            </div>
+                            <div>
+                                <span style="font-size: 12px; color: #9ca3af; display: block; margin-bottom: 2px;">学费</span>
+                                <span style="font-size: 14px; color: #ff6b35; font-weight: bold;">HK$${parseInt(item.tuition).toLocaleString()}</span>
+                            </div>
+                            <div>
+                                <span style="font-size: 12px; color: #9ca3af; display: block; margin-bottom: 2px;">语言要求</span>
+                                <span style="font-size: 14px; color: #374151; font-weight: 500;">雅思${item.ielts}/托福${item.toefl}</span>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-left: 32px;">
+                            <div style="display: flex; gap: 8px;">
+                                <span style="padding: 4px 8px; background: #f3f4f6; color: #4b5563; border-radius: 4px; font-size: 12px;">申请截止：${item.deadline}</span>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button onclick="showDetail(${id})" style="color: #ff6b35; font-size: 14px; font-weight: 500; padding: 6px 12px; border-radius: 6px; border: none; background: transparent; cursor: pointer;">查看详情</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
-        // 搜索过滤
-        function filterData() {
-            const k = document.getElementById('searchInput').value.toLowerCase();
-            const filtered = currentData.filter(m => 
-                m.cn.toLowerCase().includes(k) || 
-                m.en.toLowerCase().includes(k) ||
-                m.fac.toLowerCase().includes(k)
-            );
-            renderTable(filtered);
+        function updateSelectedList() {
+            const container = document.getElementById('selectedList');
+            const count = document.getElementById('selectedCount');
+            
+            count.textContent = `已选 ${selectedItems.size} 项`;
+            
+            if (selectedItems.size === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: #9ca3af; padding: 40px 0; font-size: 14px;">
+                        <svg width="48" height="48" fill="none" stroke="#d1d5db" stroke-width="1.5" viewBox="0 0 24 24" style="margin: 0 auto 8px auto;">
+                            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        暂无选中专业<br>
+                        <span style="font-size: 12px;">点击左侧列表选择感兴趣的专业</span>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = Array.from(selectedItems).map(id => {
+                const item = programData[id];
+                return `
+                    <div class="selected-item" style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 12px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+                        <div>
+                            <div style="font-weight: 500; color: #1f2937; font-size: 14px;">${item.name}</div>
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 2px;">${item.school} · ${item.faculty}</div>
+                        </div>
+                        <button onclick="removeSelection(${id})" style="color: #9ca3af; background: none; border: none; cursor: pointer; padding: 4px;">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                `;
+            }).join('');
         }
 
-        // 弹窗处理
-        function openDetail(enName) {
-            const m = currentData.find(i => i.en === enName);
-            if(!m) return;
-
-            document.getElementById('pop_cn').innerText = m.cn;
-            document.getElementById('pop_en').innerText = m.en;
-            document.getElementById('pop_fac').innerText = m.fac;
-            document.getElementById('pop_fee').innerText = `HK$ ${m.fee}`;
-            document.getElementById('pop_dur').innerText = m.duration;
-            document.getElementById('pop_ielts').innerText = m.req_ielts;
-            document.getElementById('pop_toefl').innerText = m.req_toefl;
-            document.getElementById('pop_uni').innerText = m.uni;
-            document.getElementById('pop_req').innerText = m.req_academic;
-            document.getElementById('pop_dead').innerText = m.deadline;
-            document.getElementById('pop_url').href = m.url;
-
-            document.getElementById('detailModal').style.display = 'flex';
+        function removeSelection(id) {
+            selectedItems.delete(id);
+            const checkboxes = document.querySelectorAll('.checkbox-custom');
+            checkboxes.forEach((cb, index) => {
+                if (cb.getAttribute('onclick') && cb.getAttribute('onclick').includes(`toggleSelection(this, ${id})`)) {
+                    cb.classList.remove('checked');
+                }
+            });
+            updateSelectedList();
         }
 
-        function closeModal() { document.getElementById('detailModal').style.display = 'none'; }
+        function showDetail(id) {
+            const item = programData[id];
+            if (item) {
+                document.getElementById('modalTitle').textContent = item.name;
+                document.getElementById('modalSubtitle').textContent = item.nameEn;
+            }
+            document.getElementById('detailModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').classList.remove('active');
+        }
+
+        function filterSchools(keyword) {
+            console.log('Filtering schools:', keyword);
+        }
+
+        function filterMajors(keyword) {
+            console.log('Filtering majors:', keyword);
+        }
+
+        function exportToPDF() {
+            if (selectedItems.size === 0) {
+                alert('请先选择至少一个专业');
+                return;
+            }
+            alert('正在生成PDF文件...');
+        }
+
+        function exportToExcel() {
+            if (selectedItems.size === 0) {
+                alert('请先选择至少一个专业');
+                return;
+            }
+
+            const data = Array.from(selectedItems).map(id => {
+                const item = programData[id];
+                return {
+                    '专业名称（中文）': item.name,
+                    '专业名称（英文）': item.nameEn,
+                    '院校': item.school,
+                    '学院': item.faculty,
+                    '学制': item.duration,
+                    '学费(HKD)': item.tuition,
+                    '雅思要求': item.ielts,
+                    '托福要求': item.toefl
+                };
+            });
+
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "选中的专业");
+            
+            const now = new Date().toLocaleDateString();
+            XLSX.writeFile(wb, `新东方查校方案_${now}.xlsx`);
+        }
+
+        function exportToPNG() {
+            if (selectedItems.size === 0) {
+                alert('请先选择至少一个专业');
+                return;
+            }
+            
+            const element = document.getElementById('selectedList');
+            html2canvas(element).then(canvas => {
+                const link = document.createElement('a');
+                link.download = '查校方案.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            });
+        }
+
+        window.onload = function() {
+            renderSchoolRankings();
+        };
     </script>
 </body>
 </html>
