@@ -730,6 +730,7 @@
         const itemsPerPage = 15;
 
         const dataFiles = [
+            'case_data.js',
             '2019.09.js',
             '2020.9.js',
             '2021.1.js',
@@ -765,28 +766,66 @@
                 let loadedCount = 0;
                 for (const file of dataFiles) {
                     try {
+                        console.log(`正在加载文件: ${file}`);
                         const response = await fetch(file);
+                        
+                        if (!response.ok) {
+                            console.warn(`文件 ${file} 加载失败，状态码: ${response.status}`);
+                            continue;
+                        }
+                        
                         const text = await response.text();
+                        console.log(`文件 ${file} 内容长度: ${text.length}`);
+                        
+                        if (!text || text.trim() === '') {
+                            console.warn(`文件 ${file} 为空`);
+                            continue;
+                        }
                         
                         const startIndex = text.indexOf('[');
                         const endIndex = text.lastIndexOf(']');
+                        
+                        if (startIndex === -1 || endIndex === -1) {
+                            console.warn(`文件 ${file} 格式不正确，找不到数组标记`);
+                            continue;
+                        }
+                        
                         const jsonData = text.substring(startIndex, endIndex + 1);
-                        
                         const fileData = JSON.parse(jsonData);
-                        allData = allData.concat(fileData);
-                        loadedCount++;
                         
-                        document.getElementById('tableBody').innerHTML = `
-                            <tr>
-                                <td colspan="11" class="no-results">
-                                    <div class="no-results-icon">📁</div>
-                                    <div>数据加载中... (${loadedCount}/${dataFiles.length})</div>
-                                </td>
-                            </tr>
-                        `;
+                        if (fileData && fileData.length > 0) {
+                            allData = allData.concat(fileData);
+                            loadedCount++;
+                            console.log(`文件 ${file} 加载成功，包含 ${fileData.length} 条数据`);
+                            
+                            document.getElementById('tableBody').innerHTML = `
+                                <tr>
+                                    <td colspan="11" class="no-results">
+                                        <div class="no-results-icon">📁</div>
+                                        <div>数据加载中... (${loadedCount} 个文件)</div>
+                                    </td>
+                                </tr>
+                            `;
+                        } else {
+                            console.warn(`文件 ${file} 解析成功但没有数据`);
+                        }
                     } catch (error) {
                         console.warn(`加载文件 ${file} 失败:`, error);
                     }
+                }
+                
+                console.log(`总共加载了 ${allData.length} 条数据`);
+                
+                if (allData.length === 0) {
+                    document.getElementById('tableBody').innerHTML = `
+                        <tr>
+                            <td colspan="11" class="no-results">
+                                <div class="no-results-icon">⚠️</div>
+                                <div>没有找到任何数据，请检查文件是否存在</div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
                 }
                 
                 filteredData = [...allData];
@@ -802,7 +841,7 @@
                     <tr>
                         <td colspan="11" class="no-results">
                             <div class="no-results-icon">⚠️</div>
-                            <div>数据加载失败，请检查文件</div>
+                            <div>数据加载失败: ${error.message}</div>
                         </td>
                     </tr>
                 `;
