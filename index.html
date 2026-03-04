@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>新东方亚英案例查询系统</title>
+    <script>
+        var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement("script");
+            hm.src = "https://hm.baidu.com/hm.js?7220e4ca4cc6bd6ff2bf8f33b7743cfb";
+            var s = document.getElementsByTagName("script")[0];
+            s.parentNode.insertBefore(hm, s);
+        })();
+    </script>
     <style>
         * {
             margin: 0;
@@ -624,6 +633,87 @@
             color: #718096;
             line-height: 1.5;
         }
+
+        .multi-select-container {
+            position: relative;
+        }
+
+        .multi-select-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            margin-top: 4px;
+        }
+
+        .multi-select-dropdown.show {
+            display: block;
+        }
+
+        .multi-select-option {
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .multi-select-option:hover {
+            background: #f8fafc;
+        }
+
+        .multi-select-option.selected {
+            background: #ebf8ff;
+        }
+
+        .multi-select-checkbox {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .multi-select-actions {
+            padding: 10px 16px;
+            border-top: 1px solid #e2e8f0;
+            background: #f8fafc;
+            display: flex;
+            gap: 8px;
+            position: sticky;
+            bottom: 0;
+        }
+
+        .multi-select-btn {
+            padding: 6px 12px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .multi-select-btn:hover {
+            background: #f1f5f9;
+        }
+
+        .multi-select-btn-primary {
+            background: #1e3a8a;
+            color: white;
+            border-color: #1e3a8a;
+        }
+
+        .multi-select-btn-primary:hover {
+            background: #2d5a87;
+        }
     </style>
 </head>
 <body>
@@ -649,6 +739,7 @@
         <header>
             <h1>新东方亚英案例查询系统</h1>
             <p>3万+留学申请案例数据，支持多条件筛选和快速检索</p>
+            <a href="admin.html" style="position: absolute; top: 30px; right: 30px; color: white; text-decoration: none; opacity: 0.7; font-size: 14px;">管理后台</a>
         </header>
 
         <div class="search-section">
@@ -659,7 +750,10 @@
                 </div>
                 <div class="search-group">
                     <label>本科学校</label>
-                    <input type="text" id="searchOrigin" placeholder="输入原学校">
+                    <div class="multi-select-container">
+                        <input type="text" id="searchOrigin" placeholder="选择或输入本科学校" oninput="showMultiSelectOptions('searchOrigin', 'origin')">
+                        <div class="multi-select-dropdown" id="searchOrigin-dropdown"></div>
+                    </div>
                 </div>
                 <div class="search-group">
                     <label>本科专业</label>
@@ -678,11 +772,17 @@
                 </div>
                 <div class="search-group">
                     <label>目标学校</label>
-                    <input type="text" id="searchTarget" placeholder="输入目标学校">
+                    <div class="multi-select-container">
+                        <input type="text" id="searchTarget" placeholder="选择或输入目标学校" oninput="showMultiSelectOptions('searchTarget', 'target_school')">
+                        <div class="multi-select-dropdown" id="searchTarget-dropdown"></div>
+                    </div>
                 </div>
                 <div class="search-group">
                     <label>目标专业</label>
-                    <input type="text" id="searchTargetMajor" placeholder="输入目标专业">
+                    <div class="multi-select-container">
+                        <input type="text" id="searchTargetMajor" placeholder="选择或输入目标专业" oninput="showMultiSelectOptions('searchTargetMajor', 'target_major')">
+                        <div class="multi-select-dropdown" id="searchTargetMajor-dropdown"></div>
+                    </div>
                 </div>
                 <div class="search-group">
                     <label>案例类型</label>
@@ -704,6 +804,12 @@
                         <option value="马来西亚">马来西亚</option>
                         <option value="泰国">泰国</option>
                         <option value="新加坡">新加坡</option>
+                    </select>
+                </div>
+                <div class="search-group">
+                    <label>入学年份</label>
+                    <select id="searchEnrollmentYear">
+                        <option value="">全部</option>
                     </select>
                 </div>
             </div>
@@ -775,6 +881,11 @@
         let filteredData = [];
         let currentPage = 1;
         const itemsPerPage = 15;
+        let multiSelectState = {
+            searchOrigin: { selected: new Set(), field: 'origin' },
+            searchTarget: { selected: new Set(), field: 'target_school' },
+            searchTargetMajor: { selected: new Set(), field: 'target_major' }
+        };
 
         function mapDataFields(item) {
             return {
@@ -935,6 +1046,8 @@
                 const endTime = performance.now();
                 document.getElementById('totalCount').textContent = allData.length.toLocaleString();
                 
+                initializeEnrollmentYearDropdown();
+                
                 currentPage = 1;
                 renderTable();
             } catch (error) {
@@ -952,27 +1065,40 @@
 
         function searchData() {
             const name = document.getElementById('searchName').value.trim();
-            const origin = document.getElementById('searchOrigin').value.trim();
             const major = document.getElementById('searchMajor').value.trim();
             const level = document.getElementById('searchLevel').value;
-            const target = document.getElementById('searchTarget').value.trim();
-            const targetMajor = document.getElementById('searchTargetMajor').value.trim();
             const type = document.getElementById('searchType').value;
             const country = document.getElementById('searchCountry').value;
+            const enrollmentYear = document.getElementById('searchEnrollmentYear').value;
 
-            console.log('搜索条件:', { name, origin, major, level, target, targetMajor, type, country });
+            const originSelected = multiSelectState.searchOrigin.selected;
+            const targetSelected = multiSelectState.searchTarget.selected;
+            const targetMajorSelected = multiSelectState.searchTargetMajor.selected;
+
+            console.log('搜索条件:', { 
+                name, 
+                originSelected: Array.from(originSelected), 
+                major, 
+                level, 
+                targetSelected: Array.from(targetSelected), 
+                targetMajorSelected: Array.from(targetMajorSelected), 
+                type, 
+                country, 
+                enrollmentYear 
+            });
 
             filteredData = allData.filter(item => {
                 const matchName = !name || item.name.toLowerCase().includes(name.toLowerCase());
-                const matchOrigin = !origin || item.origin.toLowerCase().includes(origin.toLowerCase());
+                const matchOrigin = originSelected.size === 0 || originSelected.has(item.origin);
                 const matchMajor = !major || item.major_origin.toLowerCase().includes(major.toLowerCase());
-                const matchLevel = !level || item.level === level;
-                const matchTarget = !target || item.target_school.toLowerCase().includes(target.toLowerCase());
-                const matchTargetMajor = !targetMajor || item.target_major.toLowerCase().includes(targetMajor.toLowerCase());
-                const matchType = !type || item.type === type;
-                const matchCountry = !country || item.country === country;
+                const matchLevel = !level || (item.level && item.level.trim() === level);
+                const matchTarget = targetSelected.size === 0 || targetSelected.has(item.target_school);
+                const matchTargetMajor = targetMajorSelected.size === 0 || targetMajorSelected.has(item.target_major);
+                const matchType = !type || (item.type && item.type.trim() === type);
+                const matchCountry = !country || (item.country && item.country.trim() === country);
+                const matchEnrollmentYear = !enrollmentYear || (item.enrollment_year && item.enrollment_year.toString() === enrollmentYear);
 
-                return matchName && matchOrigin && matchMajor && matchLevel && matchTarget && matchTargetMajor && matchType && matchCountry;
+                return matchName && matchOrigin && matchMajor && matchLevel && matchTarget && matchTargetMajor && matchType && matchCountry && matchEnrollmentYear;
             });
 
             currentPage = 1;
@@ -989,6 +1115,11 @@
             document.getElementById('searchTargetMajor').value = '';
             document.getElementById('searchType').value = '';
             document.getElementById('searchCountry').value = '';
+            document.getElementById('searchEnrollmentYear').value = '';
+            
+            multiSelectState.searchOrigin.selected.clear();
+            multiSelectState.searchTarget.selected.clear();
+            multiSelectState.searchTargetMajor.selected.clear();
             
             filteredData = [...allData];
             currentPage = 1;
@@ -1095,8 +1226,149 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        function initializeEnrollmentYearDropdown() {
+            const years = new Set();
+            allData.forEach(item => {
+                if (item.enrollment_year) {
+                    years.add(item.enrollment_year.toString());
+                }
+            });
+            
+            const sortedYears = Array.from(years).sort((a, b) => b - a);
+            const select = document.getElementById('searchEnrollmentYear');
+            select.innerHTML = '<option value="">全部</option>';
+            sortedYears.forEach(year => {
+                select.innerHTML += `<option value="${year}">${year}</option>`;
+            });
+        }
+
+        function showMultiSelectOptions(inputId, field) {
+            const input = document.getElementById(inputId);
+            const dropdown = document.getElementById(`${inputId}-dropdown`);
+            const searchValue = input.value.trim().toLowerCase();
+            
+            if (searchValue === '') {
+                dropdown.classList.remove('show');
+                return;
+            }
+            
+            const uniqueValues = new Set();
+            allData.forEach(item => {
+                const value = item[field];
+                if (value && value.toLowerCase().includes(searchValue)) {
+                    uniqueValues.add(value);
+                }
+            });
+            
+            const sortedValues = Array.from(uniqueValues).sort();
+            const selectedSet = multiSelectState[inputId].selected;
+            
+            let html = '';
+            sortedValues.forEach(value => {
+                const isSelected = selectedSet.has(value);
+                html += `
+                    <div class="multi-select-option ${isSelected ? 'selected' : ''}" onclick="toggleMultiSelect('${inputId}', '${value.replace(/'/g, "\\'")}')">
+                        <input type="checkbox" class="multi-select-checkbox" ${isSelected ? 'checked' : ''}>
+                        <span>${value}</span>
+                    </div>
+                `;
+            });
+            
+            if (sortedValues.length === 0) {
+                html = '<div style="padding: 10px 16px; color: #718096;">无匹配结果</div>';
+            }
+            
+            html += `
+                <div class="multi-select-actions">
+                    <button class="multi-select-btn" onclick="selectAllMultiSelect('${inputId}')">全选</button>
+                    <button class="multi-select-btn" onclick="clearMultiSelect('${inputId}')">清空</button>
+                    <button class="multi-select-btn multi-select-btn-primary" onclick="applyMultiSelect('${inputId}')">确定</button>
+                </div>
+            `;
+            
+            dropdown.innerHTML = html;
+            dropdown.classList.add('show');
+        }
+
+        function toggleMultiSelect(inputId, value) {
+            const selectedSet = multiSelectState[inputId].selected;
+            if (selectedSet.has(value)) {
+                selectedSet.delete(value);
+            } else {
+                selectedSet.add(value);
+            }
+            showMultiSelectOptions(inputId, multiSelectState[inputId].field);
+        }
+
+        function selectAllMultiSelect(inputId) {
+            const input = document.getElementById(inputId);
+            const searchValue = input.value.trim().toLowerCase();
+            const field = multiSelectState[inputId].field;
+            
+            const uniqueValues = new Set();
+            allData.forEach(item => {
+                const value = item[field];
+                if (value && value.toLowerCase().includes(searchValue)) {
+                    uniqueValues.add(value);
+                }
+            });
+            
+            uniqueValues.forEach(value => {
+                multiSelectState[inputId].selected.add(value);
+            });
+            showMultiSelectOptions(inputId, field);
+        }
+
+        function clearMultiSelect(inputId) {
+            multiSelectState[inputId].selected.clear();
+            showMultiSelectOptions(inputId, multiSelectState[inputId].field);
+        }
+
+        function applyMultiSelect(inputId) {
+            const dropdown = document.getElementById(`${inputId}-dropdown`);
+            const selectedSet = multiSelectState[inputId].selected;
+            const input = document.getElementById(inputId);
+            
+            if (selectedSet.size === 0) {
+                input.value = '';
+            } else {
+                input.value = `已选择 ${selectedSet.size} 项`;
+            }
+            
+            dropdown.classList.remove('show');
+        }
+
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.multi-select-container')) {
+                document.querySelectorAll('.multi-select-dropdown').forEach(dropdown => {
+                    dropdown.classList.remove('show');
+                });
+            }
+        });
+
+        function recordVisit() {
+            const STORAGE_KEY = 'case_system_visits';
+            const visits = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            
+            const visit = {
+                timestamp: new Date().toISOString(),
+                userAgent: navigator.userAgent,
+                referrer: document.referrer || '直接访问'
+            };
+            
+            visits.push(visit);
+            
+            const maxVisits = 1000;
+            if (visits.length > maxVisits) {
+                visits.splice(0, visits.length - maxVisits);
+            }
+            
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(visits));
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             loadData();
+            recordVisit();
         });
 
         document.querySelectorAll('.search-group input, .search-group select').forEach(input => {
