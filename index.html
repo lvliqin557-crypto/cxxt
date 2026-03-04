@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新东方亚英案例查询系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            text-align: left !important;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background: #f5f7fa;
+            color: #2c3e50;
+            line-height: 1.6;
+            text-align: left !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            font-size: 16px;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 !important;
+            padding: 20px;
+            text-align: left !important;
+            width: 100% !important;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #2d5a87 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .search-section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            margin-left: 0;
+            margin-right: 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            text-align: left;
+        }
+
+        .search-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 10px 0;
+            margin-bottom: 15px;
+            color: #1e3a8a;
+            font-weight: 500;
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+
+        .search-toggle:hover {
+            color: #2d5a87;
+        }
+
+        .search-toggle-icon {
+            transition: transform 0.3s;
+        }
+
+        .search-toggle-icon.open {
+            transform: rotate(180deg);
+        }
+
+        .advanced-search {
+            display: none;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #f7fafc;
+            animation: slideDown 0.3s ease;
+        }
+
+        .advanced-search.show {
+            display: grid;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .search-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .search-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .search-group label {
+            font-size: 15px;
+            color: #5a6c7d;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .search-group input,
+        .search-group select {
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.2s;
+            background: #fff;
+        }
+
+        .search-group input:focus,
+        .search-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #1e3a8a;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2d5a87;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #f7fafc;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+            border-color: #cbd5e0;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+        }
+
+        .stats-info {
+            display: flex;
+            gap: 25px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-label {
+            font-size: 15px;
+            color: #718096;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .stat-value.highlight {
+            color: #667eea;
+        }
+
+        .data-table-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 15px;
+        }
+
+        thead {
+            background: #f8fafc;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th {
+            padding: 20px 18px;
+            text-align: left;
+            font-weight: 600;
+            color: #4a5568;
+            border-bottom: 1px solid #e2e8f0;
+            white-space: nowrap;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 18px 18px;
+            border-bottom: none;
+            color: #2d3748;
+        }
+
+        tbody tr {
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #f7fafc;
+        }
+
+        tbody tr:hover {
+            background: #f8fafc;
+            transform: translateX(2px);
+        }
+
+        tbody tr:nth-child(even) {
+            background: #fafbfc;
+        }
+
+        tbody tr:nth-child(even):hover {
+            background: #f8fafc;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+            margin: 2px;
+        }
+
+        .tag-985 {
+            background: #ebf8ff;
+            color: #2b6cb0;
+        }
+
+        .tag-211 {
+            background: #f0fff4;
+            color: #276749;
+        }
+
+        .tag-other {
+            background: #edf2f7;
+            color: #4a5568;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            padding: 0;
+        }
+
+        .pagination button {
+            padding: 10px 18px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: all 0.2s;
+            color: #4a5568;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: #f7fafc;
+            border-color: #cbd5e0;
+        }
+
+        .pagination button.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-info {
+            font-size: 15px;
+            color: #718096;
+            margin: 0 15px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718096;
+        }
+
+        .no-results-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            header {
+                padding: 20px;
+            }
+
+            header h1 {
+                font-size: 22px;
+            }
+
+            .search-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-bar {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .stats-info {
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+
+            table {
+                font-size: 11px;
+            }
+
+            th, td {
+                padding: 8px 10px;
+            }
+        }
+
+        .score-highlight {
+            font-weight: 500;
+            color: #2d3748;
+        }
+
+        .school-name {
+            font-weight: 500;
+            color: #4a5568;
+        }
+
+        .major-name {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .id-cell {
+            color: #cbd5e0;
+            font-size: 13px;
+            font-weight: 400;
+            text-align: center;
+        }
+
+        .target-highlight {
+            font-weight: 600;
+            color: #2d3748;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-align: left;
+        }
+
+        .exp-cell {
+            color: #718096;
+            font-size: 13px;
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: help;
+            text-align: left;
+        }
+
+        .score-highlight {
+            text-align: center;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            overflow: auto;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 0;
+            border: none;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            animation: modalFadeIn 0.3s;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #2d5a87 100%);
+            color: white;
+            padding: 20px 25px;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .close {
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .close:hover {
+            opacity: 0.7;
+        }
+
+        .modal-body {
+            padding: 30px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .detail-section {
+            margin-bottom: 25px;
+        }
+
+        .detail-section h3 {
+            color: #1e3a8a;
+            font-size: 18px;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-label {
+            font-size: 13px;
+            color: #718096;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .detail-value {
+            font-size: 15px;
+            color: #2d3748;
+            font-weight: 500;
+        }
+
+        .detail-value.highlight {
+            color: #1e3a8a;
+        }
+
+        .detail-row {
+            display: flex;
+            margin-bottom: 10px;
+        }
+
+        .detail-row-label {
+            min-width: 120px;
+            font-size: 14px;
+            color: #718096;
+            font-weight: 500;
+        }
+
+        .detail-row-value {
+            font-size: 15px;
+            color: #2d3748;
+            flex: 1;
+        }
+
+        .background-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .background-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            transition: all 0.2s;
+        }
+
+        .background-card:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e0;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .background-icon {
+            font-size: 32px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .background-content {
+            flex: 1;
+        }
+
+        .background-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 8px;
+        }
+
+        .background-text {
+            font-size: 14px;
+            color: #718096;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>新东方亚英案例查询系统</h1>
+            <p>3万+留学申请案例数据，支持多条件筛选和快速检索</p>
+        </header>
+
+        <div class="search-section">
+            <div class="search-grid">
+                <div class="search-group">
+                    <label>数据文件</label>
+                    <input type="file" id="dataFile" accept=".js" onchange="loadDataFromFile(event)">
+                </div>
+                <div class="search-group">
+                    <label>学生姓名</label>
+                    <input type="text" id="searchName" placeholder="输入姓名搜索">
+                </div>
+                <div class="search-group">
+                    <label>本科学校</label>
+                    <input type="text" id="searchOrigin" placeholder="输入原学校">
+                </div>
+                <div class="search-group">
+                    <label>目标学校</label>
+                    <input type="text" id="searchTarget" placeholder="输入目标学校">
+                </div>
+            </div>
+            <div class="search-toggle" onclick="toggleAdvancedSearch()">
+                <span>高级搜索</span>
+                <span class="search-toggle-icon" id="searchToggleIcon">▼</span>
+            </div>
+            <div class="advanced-search" id="advancedSearch">
+                <div class="search-group">
+                    <label>本科专业</label>
+                    <input type="text" id="searchMajor" placeholder="输入本科专业">
+                </div>
+                <div class="search-group">
+                    <label>学校层次</label>
+                    <select id="searchLevel">
+                        <option value="">全部</option>
+                        <option value="985">985</option>
+                        <option value="211">211</option>
+                        <option value="海外本科">海外本科</option>
+                        <option value="普通本科">普通本科</option>
+                        <option value="独立学院">独立学院</option>
+                    </select>
+                </div>
+                <div class="search-group">
+                    <label>目标专业</label>
+                    <input type="text" id="searchTargetMajor" placeholder="输入目标专业">
+                </div>
+                <div class="search-group">
+                    <label>案例类型</label>
+                    <select id="searchType">
+                        <option value="">全部</option>
+                        <option value="商科类">商科类</option>
+                        <option value="工科类">工科类</option>
+                        <option value="理科类">理科类</option>
+                        <option value="文科类">文科类</option>
+                        <option value="艺术类">艺术类</option>
+                    </select>
+                </div>
+                <div class="search-group">
+                    <label>国家/地区</label>
+                    <select id="searchCountry">
+                        <option value="">全部</option>
+                        <option value="中国香港">中国香港</option>
+                        <option value="中国澳门">中国澳门</option>
+                        <option value="马来西亚">马来西亚</option>
+                        <option value="泰国">泰国</option>
+                        <option value="新加坡">新加坡</option>
+                    </select>
+                </div>
+            </div>
+            <div class="search-actions">
+                <button class="btn btn-primary" onclick="searchData()">搜索</button>
+                <button class="btn btn-secondary" onclick="resetSearch()">重置</button>
+            </div>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stats-info">
+                <div class="stat-item">
+                    <span class="stat-label">总记录数:</span>
+                    <span class="stat-value highlight" id="totalCount">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">当前页:</span>
+                    <span class="stat-value" id="currentPageInfo">1/1</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">每页显示:</span>
+                    <span class="stat-value">15条</span>
+                </div>
+            </div>
+            <div class="pagination" id="pagination">
+            </div>
+        </div>
+
+        <div class="data-table-container">
+            <div class="table-wrapper">
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>姓名</th>
+                            <th>本科学校</th>
+                            <th>层次</th>
+                            <th>本科专业</th>
+                            <th>目标学校</th>
+                            <th>目标专业</th>
+                            <th>成绩</th>
+                            <th>类型</th>
+                            <th>实习经历</th>
+                            <th>科研经历</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="detailModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>学生详情</h2>
+                <span class="close" onclick="closeDetail()">&times;</span>
+            </div>
+            <div class="modal-body" id="detailBody">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allData = [];
+        let filteredData = [];
+        let currentPage = 1;
+        const itemsPerPage = 15;
+
+        async function loadData() {
+            document.getElementById('tableBody').innerHTML = `
+                <tr>
+                    <td colspan="11" class="no-results">
+                        <div class="no-results-icon">📁</div>
+                        <div>请点击上方"数据文件"输入框，选择 case_data.js 文件</div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        async function loadDataFromFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const startTime = performance.now();
+            
+            try {
+                const text = await file.text();
+                
+                const startIndex = text.indexOf('[');
+                const endIndex = text.lastIndexOf(']');
+                const jsonData = text.substring(startIndex, endIndex + 1);
+                
+                allData = JSON.parse(jsonData);
+                filteredData = [...allData];
+                
+                const endTime = performance.now();
+                document.getElementById('totalCount').textContent = allData.length.toLocaleString();
+                
+                renderTable();
+            } catch (error) {
+                console.error('加载数据失败:', error);
+                document.getElementById('tableBody').innerHTML = `
+                    <tr>
+                        <td colspan="11" class="no-results">
+                            <div class="no-results-icon">⚠️</div>
+                            <div>数据加载失败，请检查文件格式</div>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        function searchData() {
+            const name = document.getElementById('searchName').value.trim();
+            const origin = document.getElementById('searchOrigin').value.trim();
+            const major = document.getElementById('searchMajor').value.trim();
+            const level = document.getElementById('searchLevel').value;
+            const target = document.getElementById('searchTarget').value.trim();
+            const targetMajor = document.getElementById('searchTargetMajor').value.trim();
+            const type = document.getElementById('searchType').value;
+            const country = document.getElementById('searchCountry').value;
+
+            console.log('搜索条件:', { name, origin, major, level, target, targetMajor, type, country });
+
+            filteredData = allData.filter(item => {
+                const matchName = !name || item.name.includes(name);
+                const matchOrigin = !origin || item.origin.includes(origin);
+                const matchMajor = !major || item.major_origin.includes(major);
+                const matchLevel = !level || item.level === level;
+                const matchTarget = !target || item.target_school.includes(target);
+                const matchTargetMajor = !targetMajor || item.target_major.includes(targetMajor);
+                const matchType = !type || item.type === type;
+                const matchCountry = !country || item.country === country;
+
+                return matchName && matchOrigin && matchMajor && matchLevel && matchTarget && matchTargetMajor && matchType && matchCountry;
+            });
+
+            currentPage = 1;
+            document.getElementById('totalCount').textContent = filteredData.length.toLocaleString();
+            renderTable();
+        }
+
+        function resetSearch() {
+            document.getElementById('searchName').value = '';
+            document.getElementById('searchOrigin').value = '';
+            document.getElementById('searchMajor').value = '';
+            document.getElementById('searchLevel').value = '';
+            document.getElementById('searchTarget').value = '';
+            document.getElementById('searchTargetMajor').value = '';
+            document.getElementById('searchType').value = '';
+            document.getElementById('searchCountry').value = '';
+            
+            filteredData = [...allData];
+            currentPage = 1;
+            document.getElementById('totalCount').textContent = allData.length.toLocaleString();
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+            
+            if (filteredData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="11" class="no-results">
+                            <div class="no-results-icon">🔍</div>
+                            <div>没有找到匹配的案例</div>
+                        </td>
+                    </tr>
+                `;
+                renderPagination(0);
+                return;
+            }
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, filteredData.length);
+            const pageData = filteredData.slice(startIndex, endIndex);
+
+            const html = pageData.map(item => {
+                const workExp = item.has_work_experience || '-';
+                const researchExp = item.has_research || '-';
+                const workExpDisplay = workExp.length > 10 ? workExp.substring(0, 10) + '...' : workExp;
+                const researchExpDisplay = researchExp.length > 10 ? researchExp.substring(0, 10) + '...' : researchExp;
+                
+                return `
+                <tr>
+                    <td class="id-cell">${item.id}</td>
+                    <td class="school-name" style="cursor: pointer; color: #1e3a8a;" onclick="showDetail(${item.id})">${item.name}</td>
+                    <td>${item.origin}</td>
+                    <td><span class="tag tag-${getLevelClass(item.level)}">${item.level}</span></td>
+                    <td class="major-name">${item.major_origin}</td>
+                    <td class="target-highlight">${item.target_school}</td>
+                    <td class="target-highlight">${item.target_major}</td>
+                    <td class="score-highlight">${item.score}</td>
+                    <td><span class="tag tag-other">${item.type}</span></td>
+                    <td class="exp-cell" title="${workExp}">${workExpDisplay}</td>
+                    <td class="exp-cell" title="${researchExp}">${researchExpDisplay}</td>
+                </tr>
+                `;
+            }).join('');
+
+            tbody.innerHTML = html;
+            renderPagination(totalPages);
+            
+            document.getElementById('currentPageInfo').textContent = `${currentPage}/${totalPages}`;
+        }
+
+        function getLevelClass(level) {
+            if (level === '985') return '985';
+            if (level === '211') return '211';
+            return 'other';
+        }
+
+        function renderPagination(totalPages) {
+            const pagination = document.getElementById('pagination');
+            
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+
+            let html = `
+                <button onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''}>首页</button>
+                <button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>上一页</button>
+            `;
+
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+            if (endPage - startPage < maxVisiblePages - 1) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<button onclick="goToPage(${i})" ${i === currentPage ? 'class="active"' : ''}>${i}</button>`;
+            }
+
+            html += `
+                <button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>下一页</button>
+                <button onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>末页</button>
+                <span class="pagination-info">共 ${totalPages} 页</span>
+            `;
+
+            pagination.innerHTML = html;
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            renderTable();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        document.addEventListener('DOMContentLoaded', loadData);
+
+        document.querySelectorAll('.search-group input, .search-group select').forEach(input => {
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchData();
+                }
+            });
+        });
+
+        function showDetail(id) {
+            const item = allData.find(d => d.id === id);
+            if (!item) return;
+
+            const detailBody = document.getElementById('detailBody');
+            detailBody.innerHTML = `
+                <div class="detail-section">
+                    <h3>基本信息</h3>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">学生姓名</span>
+                            <span class="detail-value highlight">${item.name}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">ID</span>
+                            <span class="detail-value">${item.id}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">案例类型</span>
+                            <span class="detail-value">${item.type}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h3>本科背景</h3>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">本科学校</span>
+                            <span class="detail-value">${item.origin}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">学校层次</span>
+                            <span class="detail-value"><span class="tag tag-${getLevelClass(item.level)}">${item.level}</span></span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">本科专业</span>
+                            <span class="detail-value">${item.major_origin}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h3>申请信息</h3>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">目标学校</span>
+                            <span class="detail-value highlight">${item.target_school}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">目标专业</span>
+                            <span class="detail-value">${item.target_major}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">学位类型</span>
+                            <span class="detail-value">${item.degree}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h3>成绩信息</h3>
+                    <div class="detail-row">
+                        <span class="detail-row-label">综合成绩</span>
+                        <span class="detail-row-value">${item.score || '-'}</span>
+                    </div>
+                    ${item.toefl ? `<div class="detail-row"><span class="detail-row-label">TOEFL</span><span class="detail-row-value">${item.toefl}</span></div>` : ''}
+                    ${item.ielts ? `<div class="detail-row"><span class="detail-row-label">IELTS</span><span class="detail-row-value">${item.ielts}</span></div>` : ''}
+                    ${item.gre ? `<div class="detail-row"><span class="detail-row-label">GRE</span><span class="detail-row-value">${item.gre}</span></div>` : ''}
+                    ${item.gmat ? `<div class="detail-row"><span class="detail-row-label">GMAT</span><span class="detail-row-value">${item.gmat}</span></div>` : ''}
+                </div>
+
+                ${item.has_work_experience || item.exchange_experience || item.has_research || item.bg_project ? `
+                <div class="detail-section">
+                    <h3>背景经历</h3>
+                    <div class="background-grid">
+                        ${item.has_work_experience ? `
+                        <div class="background-card">
+                            <div class="background-icon">💼</div>
+                            <div class="background-content">
+                                <div class="background-title">工作数量</div>
+                                <div class="background-text">${item.has_work_experience.match(/\d+次/) ? item.has_work_experience.match(/\d+次/)[0] : '-'}</div>
+                            </div>
+                        </div>
+                        ` : ''}
+                        ${item.has_work_experience ? `
+                        <div class="background-card">
+                            <div class="background-icon">📝</div>
+                            <div class="background-content">
+                                <div class="background-title">工作经历</div>
+                                <div class="background-text">${item.has_work_experience.replace(/\d+次/, '').trim() || '无详细描述'}</div>
+                            </div>
+                        </div>
+                        ` : ''}
+                        ${item.has_research ? `
+                        <div class="background-card">
+                            <div class="background-icon">🔬</div>
+                            <div class="background-content">
+                                <div class="background-title">科研数量</div>
+                                <div class="background-text">${item.has_research.match(/\d+次/) ? item.has_research.match(/\d+次/)[0] : '-'}</div>
+                            </div>
+                        </div>
+                        ` : ''}
+                        ${item.has_research ? `
+                        <div class="background-card">
+                            <div class="background-icon">📊</div>
+                            <div class="background-content">
+                                <div class="background-title">科研经历</div>
+                                <div class="background-text">${item.has_research.replace(/\d+次/, '').trim() || '无详细描述'}</div>
+                            </div>
+                        </div>
+                        ` : ''}
+                        ${item.exchange_experience ? `
+                        <div class="background-card">
+                            <div class="background-icon">🌍</div>
+                            <div class="background-content">
+                                <div class="background-title">交换经历</div>
+                                <div class="background-text">${item.exchange_experience}</div>
+                            </div>
+                        </div>
+                        ` : ''}
+                        ${item.bg_project ? `
+                        <div class="background-card">
+                            <div class="background-icon">📋</div>
+                            <div class="background-content">
+                                <div class="background-title">项目经历</div>
+                                <div class="background-text">${item.bg_project}</div>
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+                ` : ''}
+
+                ${item.is_interview || item.is_written_test || item.scholarship || item.remarks ? `
+                <div class="detail-section">
+                    <h3>其他信息</h3>
+                    ${item.is_interview ? `<div class="detail-row"><span class="detail-row-label">面试情况</span><span class="detail-row-value">${item.is_interview}</span></div>` : ''}
+                    ${item.interview_time ? `<div class="detail-row"><span class="detail-row-label">面试时间</span><span class="detail-row-value">${item.interview_time}</span></div>` : ''}
+                    ${item.interview_method ? `<div class="detail-row"><span class="detail-row-label">面试方式</span><span class="detail-row-value">${item.interview_method}</span></div>` : ''}
+                    ${item.is_written_test ? `<div class="detail-row"><span class="detail-row-label">笔试情况</span><span class="detail-row-value">${item.is_written_test}</span></div>` : ''}
+                    ${item.written_test_time ? `<div class="detail-row"><span class="detail-row-label">笔试时间</span><span class="detail-row-value">${item.written_test_time}</span></div>` : ''}
+                    ${item.scholarship ? `<div class="detail-row"><span class="detail-row-label">奖学金</span><span class="detail-row-value">${item.scholarship}</span></div>` : ''}
+                    ${item.remarks ? `<div class="detail-row"><span class="detail-row-label">备注</span><span class="detail-row-value">${item.remarks}</span></div>` : ''}
+                </div>
+                ` : ''}
+            `;
+
+            document.getElementById('detailModal').style.display = 'block';
+        }
+
+        function closeDetail() {
+            document.getElementById('detailModal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('detailModal');
+            if (event.target === modal) {
+                closeDetail();
+            }
+        }
+
+        function toggleAdvancedSearch() {
+            const advancedSearch = document.getElementById('advancedSearch');
+            const icon = document.getElementById('searchToggleIcon');
+            advancedSearch.classList.toggle('show');
+            icon.classList.toggle('open');
+        }
+    </script>
+</body>
+</html>
