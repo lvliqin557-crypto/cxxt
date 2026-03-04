@@ -963,12 +963,12 @@
             console.log('搜索条件:', { name, origin, major, level, target, targetMajor, type, country });
 
             filteredData = allData.filter(item => {
-                const matchName = !name || item.name.includes(name);
-                const matchOrigin = !origin || item.origin.includes(origin);
-                const matchMajor = !major || item.major_origin.includes(major);
+                const matchName = !name || item.name.toLowerCase().includes(name.toLowerCase());
+                const matchOrigin = !origin || item.origin.toLowerCase().includes(origin.toLowerCase());
+                const matchMajor = !major || item.major_origin.toLowerCase().includes(major.toLowerCase());
                 const matchLevel = !level || item.level === level;
-                const matchTarget = !target || item.target_school.includes(target);
-                const matchTargetMajor = !targetMajor || item.target_major.includes(targetMajor);
+                const matchTarget = !target || item.target_school.toLowerCase().includes(target.toLowerCase());
+                const matchTargetMajor = !targetMajor || item.target_major.toLowerCase().includes(targetMajor.toLowerCase());
                 const matchType = !type || item.type === type;
                 const matchCountry = !country || item.country === country;
 
@@ -1108,7 +1108,7 @@
         });
 
         function showDetail(index) {
-            const item = allData[index];
+            const item = filteredData[index];
             if (!item) return;
 
             const detailBody = document.getElementById('detailBody');
