@@ -1247,17 +1247,6 @@
 
             document.getElementById('detailModal').style.display = 'block';
         }
-                    ${item.interview_method ? `<div class="detail-row"><span class="detail-row-label">面试方式</span><span class="detail-row-value">${item.interview_method}</span></div>` : ''}
-                    ${item.is_written_test ? `<div class="detail-row"><span class="detail-row-label">笔试情况</span><span class="detail-row-value">${item.is_written_test}</span></div>` : ''}
-                    ${item.written_test_time ? `<div class="detail-row"><span class="detail-row-label">笔试时间</span><span class="detail-row-value">${item.written_test_time}</span></div>` : ''}
-                    ${item.scholarship ? `<div class="detail-row"><span class="detail-row-label">奖学金</span><span class="detail-row-value">${item.scholarship}</span></div>` : ''}
-                    ${item.remarks ? `<div class="detail-row"><span class="detail-row-label">备注</span><span class="detail-row-value">${item.remarks}</span></div>` : ''}
-                </div>
-                ` : ''}
-            `;
-
-            document.getElementById('detailModal').style.display = 'block';
-        }
 
         function closeDetail() {
             document.getElementById('detailModal').style.display = 'none';
