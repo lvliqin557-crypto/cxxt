@@ -1092,8 +1092,8 @@
             });
         });
 
-        function showDetail(id) {
-            const item = allData.find(d => d.id === id);
+        function showDetail(index) {
+            const item = allData[index];
             if (!item) return;
 
             const detailBody = document.getElementById('detailBody');
