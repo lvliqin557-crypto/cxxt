@@ -1002,16 +1002,17 @@
             const endIndex = Math.min(startIndex + itemsPerPage, filteredData.length);
             const pageData = filteredData.slice(startIndex, endIndex);
 
-            const html = pageData.map(item => {
+            const html = pageData.map((item, index) => {
                 const workExp = item.has_work_experience || '-';
                 const researchExp = item.has_research || '-';
                 const workExpDisplay = workExp.length > 10 ? workExp.substring(0, 10) + '...' : workExp;
                 const researchExpDisplay = researchExp.length > 10 ? researchExp.substring(0, 10) + '...' : researchExp;
+                const actualIndex = startIndex + index;
                 
                 return `
                 <tr>
-                    <td class="id-cell">${item.id}</td>
-                    <td class="school-name" style="cursor: pointer; color: #1e3a8a;" onclick="showDetail(${item.id})">${item.name}</td>
+                    <td class="id-cell">${actualIndex + 1}</td>
+                    <td class="school-name" style="cursor: pointer; color: #1e3a8a;" onclick="showDetail(${actualIndex})">${item.name}</td>
                     <td>${item.origin}</td>
                     <td><span class="tag tag-${getLevelClass(item.level)}">${item.level}</span></td>
                     <td class="major-name">${item.major_origin}</td>
@@ -1254,7 +1255,7 @@
 
         window.onclick = function(event) {
             const modal = document.getElementById('detailModal');
-            if (event.target === modal) {
+            if (modal && event.target === modal) {
                 closeDetail();
             }
         }
