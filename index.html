@@ -22,6 +22,33 @@
             padding: 0 !important;
             width: 100% !important;
             font-size: 16px;
+            position: relative;
+        }
+
+        .watermark {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-content: center;
+            gap: 100px;
+            opacity: 0.08;
+            overflow: hidden;
+        }
+
+        .watermark-text {
+            font-size: 24px;
+            color: #ff6b6b;
+            font-weight: bold;
+            white-space: nowrap;
+            transform: rotate(-45deg);
+            user-select: none;
         }
 
         .container {
@@ -600,6 +627,24 @@
     </style>
 </head>
 <body>
+    <div class="watermark">
+        <span class="watermark-text">新东方前途出国重庆分公司</span>
+        <span class="watermark-text">新东方前途出国重庆分公司</span>
+        <span class="watermark-text">新东方前途出国重庆分公司</span>
+        <span class="watermark-text">新东方前途出国重庆分公司</span>
+        <span class="watermark-text">新东方前途出国重庆分公司</span>
+        <span class="watermark-text">新东方前途出国重庆分公司</span>
+        <span class="watermark-text">新东方前途出国重庆分公司</span>
+        <span class="watermark-text">新东方前途出国重庆分公司</span>
+        <span class="watermark-text">新东方前途出国重庆分公司</span>
+        <span class="watermark-text">新东方前途出国重庆分公司</span>
+        <span class="watermark-text">新东方前途出国重庆分公司</span>
+        <span class="watermark-text">新东方前途出国重庆分公司</span>
+        <span class="watermark-text">新东方前途出国重庆分公司</span>
+        <span class="watermark-text">新东方前途出国重庆分公司</span>
+        <span class="watermark-text">新东方前途出国重庆分公司</span>
+        <span class="watermark-text">新东方前途出国重庆分公司</span>
+    </div>
     <div class="container">
         <header>
             <h1>新东方亚英案例查询系统</h1>
@@ -703,6 +748,8 @@
                             <th>类型</th>
                             <th>实习经历</th>
                             <th>科研经历</th>
+                            <th>入学年份</th>
+                            <th>录取时间</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody">
@@ -742,16 +789,31 @@
                 type: item['类型'] || item.type || '',
                 has_work_experience: item['有无工作经历'] || item.has_work_experience || '',
                 has_research: item['有无科研经历'] || item.has_research || '',
-                country: item['国家/地区'] || item.country || '',
-                degree: item['学位'] || item.degree || '',
+                country: item['录取国家'] || item['国家/地区'] || item.country || '',
+                degree: item['申请学位'] || item['学位'] || item.degree || '',
                 is_interview: item['是否面试'] || item.is_interview || '',
                 interview_time: item['面试时间'] || item.interview_time || '',
                 interview_method: item['面试方式'] || item.interview_method || '',
                 is_written_test: item['是否笔试'] || item.is_written_test || '',
                 written_test_time: item['笔试时间'] || item.written_test_time || '',
-                scholarship: item['奖学金'] || item.scholarship || '',
+                scholarship: item['奖学金\n(如有)'] || item['奖学金'] || item.scholarship || '',
                 remarks: item['备注'] || item.remarks || '',
-                exchange_experience: item['交换经历'] || item.exchange_experience || ''
+                exchange_experience: item['交换经历'] || item.exchange_experience || '',
+                enrollment_year: item['入学年份'] || item.enrollment_year || '',
+                admission_time: item['录取时间'] || item.admission_time || '',
+                gpa: item['GPA'] || item.gpa || '',
+                gpa100: item['GPA100制'] || item.gpa100 || '',
+                toefl: item['TOEFL'] || item.toefl || '',
+                ielts: item['IELTS'] || item.ielts || '',
+                gre: item['GRE'] || item.gre || '',
+                gmat: item['GMAT'] || item.gmat || '',
+                cet4: item['CET-4'] || item.cet4 || '',
+                cet6: item['CET_6'] || item.cet6 || '',
+                kaoyan_english: item['考研英语'] || item.kaoyan_english || '',
+                bg_project: item['是否参加新东方背景提升项目（必填）'] || item.bg_project || '',
+                bg_project_details: item['备注（背景提升项目详细信息-必填）'] || item.bg_project_details || '',
+                bg_experience: item['背提经历\n下拉菜单勾选'] || item.bg_experience || '',
+                major_category: item['专业大类'] || item.major_category || ''
             };
         }
 
@@ -779,7 +841,7 @@
             
             document.getElementById('tableBody').innerHTML = `
                 <tr>
-                    <td colspan="11" class="no-results">
+                    <td colspan="13" class="no-results">
                         <div class="no-results-icon">📁</div>
                         <div>数据加载中...</div>
                     </td>
@@ -825,7 +887,7 @@
                             
                             document.getElementById('tableBody').innerHTML = `
                                 <tr>
-                                    <td colspan="11" class="no-results">
+                                    <td colspan="13" class="no-results">
                                         <div class="no-results-icon">📁</div>
                                         <div>数据加载中... (${loadedCount} 个文件)</div>
                                     </td>
@@ -844,7 +906,7 @@
                 if (allData.length === 0) {
                     document.getElementById('tableBody').innerHTML = `
                         <tr>
-                            <td colspan="11" class="no-results">
+                            <td colspan="13" class="no-results">
                                 <div class="no-results-icon">⚠️</div>
                                 <div>没有找到任何数据，请检查文件是否存在</div>
                             </td>
@@ -864,7 +926,7 @@
                 console.error('加载数据失败:', error);
                 document.getElementById('tableBody').innerHTML = `
                     <tr>
-                        <td colspan="11" class="no-results">
+                        <td colspan="13" class="no-results">
                             <div class="no-results-icon">⚠️</div>
                             <div>数据加载失败: ${error.message}</div>
                         </td>
@@ -926,7 +988,7 @@
             if (filteredData.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="11" class="no-results">
+                        <td colspan="13" class="no-results">
                             <div class="no-results-icon">🔍</div>
                             <div>没有找到匹配的案例</div>
                         </td>
@@ -959,6 +1021,8 @@
                     <td><span class="tag tag-other">${item.type}</span></td>
                     <td class="exp-cell" title="${workExp}">${workExpDisplay}</td>
                     <td class="exp-cell" title="${researchExp}">${researchExpDisplay}</td>
+                    <td>${item.enrollment_year || '-'}</td>
+                    <td>${item.admission_time || '-'}</td>
                 </tr>
                 `;
             }).join('');
@@ -1037,33 +1101,19 @@
                     <h3>基本信息</h3>
                     <div class="detail-grid">
                         <div class="detail-item">
-                            <span class="detail-label">学生姓名</span>
+                            <span class="detail-label">申请人姓名</span>
                             <span class="detail-value highlight">${item.name}</span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">ID</span>
-                            <span class="detail-value">${item.id}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">案例类型</span>
-                            <span class="detail-value">${item.type}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="detail-section">
-                    <h3>本科背景</h3>
-                    <div class="detail-grid">
-                        <div class="detail-item">
-                            <span class="detail-label">本科学校</span>
+                            <span class="detail-label">就读院校</span>
                             <span class="detail-value">${item.origin}</span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">学校层次</span>
+                            <span class="detail-label">院校背景</span>
                             <span class="detail-value"><span class="tag tag-${getLevelClass(item.level)}">${item.level}</span></span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">本科专业</span>
+                            <span class="detail-label">就读专业</span>
                             <span class="detail-value">${item.major_origin}</span>
                         </div>
                     </div>
@@ -1073,99 +1123,130 @@
                     <h3>申请信息</h3>
                     <div class="detail-grid">
                         <div class="detail-item">
-                            <span class="detail-label">目标学校</span>
+                            <span class="detail-label">申请院校名称</span>
                             <span class="detail-value highlight">${item.target_school}</span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">目标专业</span>
+                            <span class="detail-label">申请专业名称（英文）</span>
                             <span class="detail-value">${item.target_major}</span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">学位类型</span>
+                            <span class="detail-label">申请学位</span>
                             <span class="detail-value">${item.degree}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">专业大类</span>
+                            <span class="detail-value">${item.major_category || '-'}</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="detail-section">
                     <h3>成绩信息</h3>
-                    <div class="detail-row">
-                        <span class="detail-row-label">综合成绩</span>
-                        <span class="detail-row-value">${item.score || '-'}</span>
+                    <div class="detail-grid">
+                        ${item.gpa ? `<div class="detail-item"><span class="detail-label">GPA</span><span class="detail-value">${item.gpa}</span></div>` : ''}
+                        ${item.gpa100 ? `<div class="detail-item"><span class="detail-label">GPA100制</span><span class="detail-value">${item.gpa100}</span></div>` : ''}
+                        ${item.toefl ? `<div class="detail-item"><span class="detail-label">TOEFL</span><span class="detail-value">${item.toefl}</span></div>` : ''}
+                        ${item.ielts ? `<div class="detail-item"><span class="detail-label">IELTS</span><span class="detail-value">${item.ielts}</span></div>` : ''}
+                        ${item.gre ? `<div class="detail-item"><span class="detail-label">GRE</span><span class="detail-value">${item.gre}</span></div>` : ''}
+                        ${item.gmat ? `<div class="detail-item"><span class="detail-label">GMAT</span><span class="detail-value">${item.gmat}</span></div>` : ''}
+                        ${item.cet4 ? `<div class="detail-item"><span class="detail-label">CET-4</span><span class="detail-value">${item.cet4}</span></div>` : ''}
+                        ${item.cet6 ? `<div class="detail-item"><span class="detail-label">CET-6</span><span class="detail-value">${item.cet6}</span></div>` : ''}
+                        ${item.kaoyan_english ? `<div class="detail-item"><span class="detail-label">考研英语</span><span class="detail-value">${item.kaoyan_english}</span></div>` : ''}
                     </div>
-                    ${item.toefl ? `<div class="detail-row"><span class="detail-row-label">TOEFL</span><span class="detail-row-value">${item.toefl}</span></div>` : ''}
-                    ${item.ielts ? `<div class="detail-row"><span class="detail-row-label">IELTS</span><span class="detail-row-value">${item.ielts}</span></div>` : ''}
-                    ${item.gre ? `<div class="detail-row"><span class="detail-row-label">GRE</span><span class="detail-row-value">${item.gre}</span></div>` : ''}
-                    ${item.gmat ? `<div class="detail-row"><span class="detail-row-label">GMAT</span><span class="detail-row-value">${item.gmat}</span></div>` : ''}
                 </div>
 
-                ${item.has_work_experience || item.exchange_experience || item.has_research || item.bg_project ? `
                 <div class="detail-section">
                     <h3>背景经历</h3>
-                    <div class="background-grid">
-                        ${item.has_work_experience ? `
-                        <div class="background-card">
-                            <div class="background-icon">💼</div>
-                            <div class="background-content">
-                                <div class="background-title">工作数量</div>
-                                <div class="background-text">${item.has_work_experience.match(/\d+次/) ? item.has_work_experience.match(/\d+次/)[0] : '-'}</div>
-                            </div>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">有无工作经历</span>
+                            <span class="detail-value">${item.has_work_experience || '-'}</span>
                         </div>
-                        ` : ''}
-                        ${item.has_work_experience ? `
-                        <div class="background-card">
-                            <div class="background-icon">📝</div>
-                            <div class="background-content">
-                                <div class="background-title">工作经历</div>
-                                <div class="background-text">${item.has_work_experience.replace(/\d+次/, '').trim() || '无详细描述'}</div>
-                            </div>
+                        <div class="detail-item">
+                            <span class="detail-label">交换经历</span>
+                            <span class="detail-value">${item.exchange_experience || '-'}</span>
                         </div>
-                        ` : ''}
-                        ${item.has_research ? `
-                        <div class="background-card">
-                            <div class="background-icon">🔬</div>
-                            <div class="background-content">
-                                <div class="background-title">科研数量</div>
-                                <div class="background-text">${item.has_research.match(/\d+次/) ? item.has_research.match(/\d+次/)[0] : '-'}</div>
-                            </div>
+                        <div class="detail-item">
+                            <span class="detail-label">有无科研经历</span>
+                            <span class="detail-value">${item.has_research || '-'}</span>
                         </div>
-                        ` : ''}
-                        ${item.has_research ? `
-                        <div class="background-card">
-                            <div class="background-icon">📊</div>
-                            <div class="background-content">
-                                <div class="background-title">科研经历</div>
-                                <div class="background-text">${item.has_research.replace(/\d+次/, '').trim() || '无详细描述'}</div>
-                            </div>
-                        </div>
-                        ` : ''}
-                        ${item.exchange_experience ? `
-                        <div class="background-card">
-                            <div class="background-icon">🌍</div>
-                            <div class="background-content">
-                                <div class="background-title">交换经历</div>
-                                <div class="background-text">${item.exchange_experience}</div>
-                            </div>
-                        </div>
-                        ` : ''}
-                        ${item.bg_project ? `
-                        <div class="background-card">
-                            <div class="background-icon">📋</div>
-                            <div class="background-content">
-                                <div class="background-title">项目经历</div>
-                                <div class="background-text">${item.bg_project}</div>
-                            </div>
-                        </div>
-                        ` : ''}
                     </div>
                 </div>
-                ` : ''}
 
-                ${item.is_interview || item.is_written_test || item.scholarship || item.remarks ? `
+                <div class="detail-section">
+                    <h3>背景提升项目</h3>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">是否参加新东方背景提升项目</span>
+                            <span class="detail-value">${item.bg_project || '-'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">备注（背景提升项目详细信息）</span>
+                            <span class="detail-value">${item.bg_project_details || '-'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">背提经历</span>
+                            <span class="detail-value">${item.bg_experience || '-'}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h3>面试与笔试</h3>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">是否面试</span>
+                            <span class="detail-value">${item.is_interview || '-'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">面试时间</span>
+                            <span class="detail-value">${item.interview_time || '-'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">面试方式</span>
+                            <span class="detail-value">${item.interview_method || '-'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">是否笔试</span>
+                            <span class="detail-value">${item.is_written_test || '-'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">笔试时间</span>
+                            <span class="detail-value">${item.written_test_time || '-'}</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="detail-section">
                     <h3>其他信息</h3>
-                    ${item.is_interview ? `<div class="detail-row"><span class="detail-row-label">面试情况</span><span class="detail-row-value">${item.is_interview}</span></div>` : ''}
-                    ${item.interview_time ? `<div class="detail-row"><span class="detail-row-label">面试时间</span><span class="detail-row-value">${item.interview_time}</span></div>` : ''}
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">奖学金（如有）</span>
+                            <span class="detail-value">${item.scholarship || '-'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">备注</span>
+                            <span class="detail-value">${item.remarks || '-'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">入学年份</span>
+                            <span class="detail-value">${item.enrollment_year || '-'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">录取时间</span>
+                            <span class="detail-value">${item.admission_time || '-'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">录取国家</span>
+                            <span class="detail-value">${item.country || '-'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('detailModal').style.display = 'block';
+        }
                     ${item.interview_method ? `<div class="detail-row"><span class="detail-row-label">面试方式</span><span class="detail-row-value">${item.interview_method}</span></div>` : ''}
                     ${item.is_written_test ? `<div class="detail-row"><span class="detail-row-label">笔试情况</span><span class="detail-row-value">${item.is_written_test}</span></div>` : ''}
                     ${item.written_test_time ? `<div class="detail-row"><span class="detail-row-label">笔试时间</span><span class="detail-row-value">${item.written_test_time}</span></div>` : ''}
