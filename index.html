@@ -729,6 +729,46 @@
         let currentPage = 1;
         const itemsPerPage = 15;
 
+        function mapDataFields(item) {
+            return {
+                id: item['编号'] || item.id || '',
+                name: item['申请人姓名'] || item.name || '',
+                origin: item['就读院校'] || item.origin || '',
+                level: item['院校背景'] || item.level || '',
+                major_origin: item['就读专业'] || item.major_origin || '',
+                target_school: item['申请院校名称'] || item.target_school || '',
+                target_major: item['申请专业名称（英文）'] || item.target_major || '',
+                score: buildScoreString(item),
+                type: item['类型'] || item.type || '',
+                has_work_experience: item['有无工作经历'] || item.has_work_experience || '',
+                has_research: item['有无科研经历'] || item.has_research || '',
+                country: item['国家/地区'] || item.country || '',
+                degree: item['学位'] || item.degree || '',
+                is_interview: item['是否面试'] || item.is_interview || '',
+                interview_time: item['面试时间'] || item.interview_time || '',
+                interview_method: item['面试方式'] || item.interview_method || '',
+                is_written_test: item['是否笔试'] || item.is_written_test || '',
+                written_test_time: item['笔试时间'] || item.written_test_time || '',
+                scholarship: item['奖学金'] || item.scholarship || '',
+                remarks: item['备注'] || item.remarks || '',
+                exchange_experience: item['交换经历'] || item.exchange_experience || ''
+            };
+        }
+
+        function buildScoreString(item) {
+            const scores = [];
+            if (item['GPA']) scores.push(`GPA ${item['GPA']}`);
+            if (item['GPA100制']) scores.push(`GPA ${item['GPA100制']}`);
+            if (item['TOEFL']) scores.push(`TOEFL ${item['TOEFL']}`);
+            if (item['IELTS']) scores.push(`IELTS ${item['IELTS']}`);
+            if (item['GRE']) scores.push(`GRE ${item['GRE']}`);
+            if (item['GMAT']) scores.push(`GMAT ${item['GMAT']}`);
+            if (item['CET-4']) scores.push(`CET-4 ${item['CET-4']}`);
+            if (item['CET_6']) scores.push(`CET-6 ${item['CET_6']}`);
+            if (item['考研英语']) scores.push(`考研英语 ${item['考研英语']}`);
+            return scores.join(' / ') || '-';
+        }
+
         const dataFiles = [
             '2025.9.js'
         ];
@@ -778,7 +818,8 @@
                         const fileData = JSON.parse(jsonData);
                         
                         if (fileData && fileData.length > 0) {
-                            allData = allData.concat(fileData);
+                            const mappedData = fileData.map(mapDataFields);
+                            allData = allData.concat(mappedData);
                             loadedCount++;
                             console.log(`文件 ${file} 加载成功，包含 ${fileData.length} 条数据`);
                             
